@@ -2,17 +2,16 @@
   "name": "@vigour-io/focus",
   "main": "dist/index.js",
   "scripts": {
+    "dev": "task",
     "watch": "npm run build -- -w",
-    "build": "builder-boy src/index.js dist/index.js -t node -t browser -r"
+    "build": "builder-boy src/index.js dist/index.js -t node -r"
   },
   "files": [ "dist" ],
   "devDependencies": {
     "builder-boy": "latest",
+    "task": "latest",
     "nodemon": "^1.11.0",
     "pre-commit": "^1.1.3",
     "standard": "^8.1.0"
-  },
-  "services": {
-    "hub": "./hub"
   }
 }
