@@ -9,7 +9,7 @@ var $3265389822_$2537101590_keys = {
 
 var $3265389822_$2537101590_moveFocus = function (direction, delta) {
   if (direction) {
-    var currentPos = $3265389822_$2537101590_fm.currentFocus.pos
+    var currentPos = $3265389822_$2537101590_fm.currentFocus.yMid
     var target = $3265389822_$2537101590_fm.currentFocus
     while (target) {
       var parent = target.parent
@@ -21,16 +21,14 @@ var $3265389822_$2537101590_moveFocus = function (direction, delta) {
           var children = (void 0)
           while (children = child.children) {
             // get correct child based on position
-            var d = (void 0)
-            for (var i = children.length - 1; i >= 0; i--) {
+            for (var i = children.length - 1, d = (void 0); i >= 0; i--) {
               var next = children[i]
-              var diff = Math.abs(currentPos - (next.pos || 0))
+              var diff = Math.abs(currentPos - (next.yMid || 0))
               if (d === void 0 || diff < d) {
                 child = next
                 d = diff
               }
             }
-            if (d === void 0) { child = children[0] }
           }
           if (child.focusIn(child) !== false) {
             $3265389822_$2537101590_fm.currentFocus.focusOut($3265389822_$2537101590_fm.currentFocus)
@@ -101,7 +99,19 @@ var $3265389822_$2537101590_setOnPosition = function (coordinates, set) {
       set.parent = parent
       set.direction = onYAxis ? 'y' : 'x'
       // include more in absolute pos (like other rows in the matrix)
-      if (set.pos === void 0) { set.pos = index }
+      if (set.y === void 0) {
+        var previous = children[index - 1]
+        set.y = (previous && previous.yEnd) || index
+      }
+      if (set.yEnd === void 0) {
+        set.yEnd = set.y + (set.height || 1)
+      }
+      if (set.height === void 0) {
+        set.height = set.yEnd - set.y
+      }
+      if (set.yMid === void 0) {
+        set.yMid = set.y + set.height / 2
+      }
       children[index] = set
     } else {
       if (!children[index]) {
@@ -162,7 +172,7 @@ var $3265389822 = $3265389822_$2537101590
 window.fm = $3265389822
 
 var $1598400738_log = function (obj) { return JSON.stringify(obj, function (key, value) { return key !== 'parent' ? value : void 0; }, 2); }
-var $1598400738_menuItems = document.getElementsByTagName('aside')[0].getElementsByTagName('li')
+
 var $1598400738_focusIn = function (ref) {
 var node = ref.node;
  node.style.background = 'red' }
@@ -170,21 +180,52 @@ var $1598400738_focusOut = function (ref) {
 var node = ref.node;
  node.style.background = 'lightgrey' }
 
+var $1598400738_navItems = document.getElementsByTagName('nav')[0].getElementsByTagName('li')
+var $1598400738_menuItems = document.getElementsByTagName('aside')[0].getElementsByTagName('li')
 var $1598400738_sectionItems = document.getElementsByTagName('section')[0].getElementsByTagName('li')
 
+// [x, y, x, y]
+
+// register navitems
+for (var i = 0; i < $1598400738_navItems.length; i++) {
+  var node = $1598400738_navItems[i]
+  var rect = node.getBoundingClientRect()
+  node.innerHTML = 'h:' + rect.height + ' | w:' + rect.width
+
+  $3265389822.register([0, 0, i], {
+    node: node,
+    height: rect.height,
+    width: rect.width,
+    focusIn: $1598400738_focusIn,
+    focusOut: $1598400738_focusOut
+  })
+}
+
 // register menuitems
-for (var i = 0; i < $1598400738_menuItems.length; i++) {
-  $3265389822.register([0, i], {
-    node: $1598400738_menuItems[i],
+for (var i$1 = 0; i$1 < $1598400738_menuItems.length; i$1++) {
+  var node$1 = $1598400738_menuItems[i$1]
+  var rect$1 = node$1.getBoundingClientRect()
+  node$1.innerHTML = 'h:' + rect$1.height + ' | w:' + rect$1.width
+
+  $3265389822.register([0, 1, 0, i$1], {
+    node: node$1,
+    height: rect$1.height,
+    width: rect$1.width,
     focusIn: $1598400738_focusIn,
     focusOut: $1598400738_focusOut
   })
 }
 
 // register sectionitems
-for (var i$1 = 0; i$1 < $1598400738_sectionItems.length; i$1++) {
-  $3265389822.register([1, i$1], {
-    node: $1598400738_sectionItems[i$1],
+for (var i$2 = 0; i$2 < $1598400738_sectionItems.length; i$2++) {
+  var node$2 = $1598400738_sectionItems[i$2]
+  var rect$2 = node$2.getBoundingClientRect()
+  node$2.innerHTML = 'h:' + rect$2.height + ' | w:' + rect$2.width
+
+  $3265389822.register([0, 1, 1, i$2], {
+    node: node$2,
+    height: rect$2.height,
+    width: rect$2.width,
     focusIn: $1598400738_focusIn,
     focusOut: $1598400738_focusOut
   })
