@@ -1,14 +1,14 @@
-const keys = {
+const $2537101590_keys = {
   37: 'left',
   38: 'up',
   39: 'right',
   40: 'down'
 }
 
-const moveFocus = (direction, delta) => {
+const $2537101590_moveFocus = (direction, delta) => {
   if (direction) {
-    const currentPos = fm.currentFocus.pos
-    let target = fm.currentFocus
+    const currentPos = $2537101590_fm.currentFocus.pos
+    let target = $2537101590_fm.currentFocus
     while (target) {
       const parent = target.parent
       if (target.direction === direction) {
@@ -31,8 +31,8 @@ const moveFocus = (direction, delta) => {
             if (d === void 0) child = children[0]
           }
           if (child.focusIn(child) !== false) {
-            fm.currentFocus.focusOut(fm.currentFocus)
-            fm.currentFocus = child
+            $2537101590_fm.currentFocus.focusOut($2537101590_fm.currentFocus)
+            $2537101590_fm.currentFocus = child
             return
           }
         }
@@ -42,14 +42,14 @@ const moveFocus = (direction, delta) => {
   }
 }
 
-const addEventListeners = () => {
-  if (!fm.addedListeners) {
+const $2537101590_addEventListeners = () => {
+  if (!$2537101590_fm.addedListeners) {
     const onKeyDown = event => {
-      const key = keys[event.keyCode]
+      const key = $2537101590_keys[event.keyCode]
       if (key) {
-        const focusUpdate = fm.currentFocus.focusUpdate
+        const focusUpdate = $2537101590_fm.currentFocus.focusUpdate
         const handledByElement = focusUpdate
-          ? focusUpdate(fm.currentFocus)
+          ? focusUpdate($2537101590_fm.currentFocus)
           : false
         if (handledByElement === false) {
           let delta, direction
@@ -66,30 +66,30 @@ const addEventListeners = () => {
             direction = 'x'
             delta = 1
           }
-          moveFocus(direction, delta)
+          $2537101590_moveFocus(direction, delta)
         }
       }
     }
     global.addEventListener('keydown', onKeyDown)
-    fm.addedListeners = true
+    $2537101590_fm.addedListeners = true
   }
 }
 
-const autoFocus = set => {
-  if (!fm.currentFocus && !fm.autoFocusTimer) {
-    fm.autoFocusTimer = setTimeout(() => {
-      if (!fm.currentFocus) {
+const $2537101590_autoFocus = set => {
+  if (!$2537101590_fm.currentFocus && !$2537101590_fm.autoFocusTimer) {
+    $2537101590_fm.autoFocusTimer = setTimeout(() => {
+      if (!$2537101590_fm.currentFocus) {
         set.focusIn(set)
-        fm.currentFocus = set
+        $2537101590_fm.currentFocus = set
       }
     })
-    fm.autoFocusTimer = null
+    $2537101590_fm.autoFocusTimer = null
   }
 }
 
-const setOnPosition = (coordinates, set) => {
-  var children = fm.children
-  var parent = fm
+const $2537101590_setOnPosition = (coordinates, set) => {
+  var children = $2537101590_fm.children
+  var parent = $2537101590_fm
   var onYAxis
 
   for (var i = 0, n = coordinates.length - 1; i <= n; i++) {
@@ -117,7 +117,7 @@ const setOnPosition = (coordinates, set) => {
   }
 }
 
-const fm = {
+const $2537101590_fm = {
   currentFocus: false,
   children: [],
   /*
@@ -127,9 +127,9 @@ const fm = {
     - set (obj) eg { state, x, y, focusIn, focusUpdate, focusOut }
   */
   register (coordinates, set) {
-    addEventListeners()
-    setOnPosition(coordinates, set)
-    autoFocus(set)
+    $2537101590_addEventListeners()
+    $2537101590_setOnPosition(coordinates, set)
+    $2537101590_autoFocus(set)
   },
   /*
     unregister element, this can happen on eg. remove
@@ -137,7 +137,7 @@ const fm = {
     - coordinates (obj) eg [0,0,0]
   */
   unregister (coordinates) {
-    setOnPosition(coordinates, null)
+    $2537101590_setOnPosition(coordinates, null)
     // refocus here
   },
   /*
@@ -151,4 +151,7 @@ const fm = {
   }
 }
 
-export default fm
+var $2537101590 = $2537101590_fm
+
+
+module.exports = $2537101590
