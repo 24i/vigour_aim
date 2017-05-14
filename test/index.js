@@ -3,16 +3,41 @@ import fm from '../'
 window.fm = fm
 
 const log = obj => JSON.stringify(obj, (key, value) => key !== 'parent' ? value : void 0, 2)
-const menuItems = document.getElementsByTagName('aside')[0].getElementsByTagName('li')
+
 const focusIn = ({ node }) => { node.style.background = 'red' }
 const focusOut = ({ node }) => { node.style.background = 'lightgrey' }
 
+const navItems = document.getElementsByTagName('nav')[0].getElementsByTagName('li')
+const menuItems = document.getElementsByTagName('aside')[0].getElementsByTagName('li')
 const sectionItems = document.getElementsByTagName('section')[0].getElementsByTagName('li')
+
+// [x, y, x, y]
+
+// register navitems
+for (let i = 0; i < navItems.length; i++) {
+  const node = navItems[i]
+  const rect = node.getBoundingClientRect()
+  node.innerHTML = 'h:' + rect.height + ' | w:' + rect.width
+
+  fm.register([0, 0, i], {
+    node,
+    height: rect.height,
+    width: rect.width,
+    focusIn,
+    focusOut
+  })
+}
 
 // register menuitems
 for (let i = 0; i < menuItems.length; i++) {
-  fm.register([0, i], {
-    node: menuItems[i],
+  const node = menuItems[i]
+  const rect = node.getBoundingClientRect()
+  node.innerHTML = 'h:' + rect.height + ' | w:' + rect.width
+
+  fm.register([0, 1, 0, i], {
+    node,
+    height: rect.height,
+    width: rect.width,
     focusIn,
     focusOut
   })
@@ -20,8 +45,14 @@ for (let i = 0; i < menuItems.length; i++) {
 
 // register sectionitems
 for (let i = 0; i < sectionItems.length; i++) {
-  fm.register([1, i], {
-    node: sectionItems[i],
+  const node = sectionItems[i]
+  const rect = node.getBoundingClientRect()
+  node.innerHTML = 'h:' + rect.height + ' | w:' + rect.width
+
+  fm.register([0, 1, 1, i], {
+    node,
+    height: rect.height,
+    width: rect.width,
     focusIn,
     focusOut
   })

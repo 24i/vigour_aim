@@ -7,7 +7,7 @@ const keys = {
 
 const moveFocus = (direction, delta) => {
   if (direction) {
-    const currentPos = fm.currentFocus.pos
+    const currentPos = fm.currentFocus.yMid
     let target = fm.currentFocus
     while (target) {
       const parent = target.parent
@@ -19,16 +19,14 @@ const moveFocus = (direction, delta) => {
           let children
           while (children = child.children) {
             // get correct child based on position
-            let d
-            for (let i = children.length - 1; i >= 0; i--) {
+            for (let i = children.length - 1, d; i >= 0; i--) {
               const next = children[i]
-              const diff = Math.abs(currentPos - (next.pos || 0))
+              const diff = Math.abs(currentPos - (next.yMid || 0))
               if (d === void 0 || diff < d) {
                 child = next
                 d = diff
               }
             }
-            if (d === void 0) child = children[0]
           }
           if (child.focusIn(child) !== false) {
             fm.currentFocus.focusOut(fm.currentFocus)
@@ -99,7 +97,19 @@ const setOnPosition = (coordinates, set) => {
       set.parent = parent
       set.direction = onYAxis ? 'y' : 'x'
       // include more in absolute pos (like other rows in the matrix)
-      if (set.pos === void 0) set.pos = index
+      if (set.y === void 0) {
+        const previous = children[index - 1]
+        set.y = (previous && previous.yEnd) || index
+      }
+      if (set.yEnd === void 0) {
+        set.yEnd = set.y + (set.height || 1)
+      }
+      if (set.height === void 0) {
+        set.height = set.yEnd - set.y
+      }
+      if (set.yMid === void 0) {
+        set.yMid = set.y + set.height / 2
+      }
       children[index] = set
     } else {
       if (!children[index]) {
