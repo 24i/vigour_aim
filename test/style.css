@@ -1,0 +1,26 @@
+body {
+  display: table;
+  width: 100%;
+  height: 100%;
+}
+
+aside {
+  display: table-cell;
+  width: 200px;
+  height: 100%;
+  border: 1px solid red;
+}
+
+section {
+  display: table-cell;
+  border: 1px solid yellow;
+}
+
+li {
+  height: 50px;
+  border: 1px solid blue;
+}
+
+* {
+  border: 1px solid lightgrey;
+}
