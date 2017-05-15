@@ -7,14 +7,12 @@ var $3265389822_$2537101590_keys = {
   40: 'down'
 }
 
-var $3265389822_$2537101590_log = function (obj) { return JSON.stringify(obj, function (key, value) { return key !== 'parent' ? value : void 0; }, 2); }
-
 var $3265389822_$2537101590_findClosestDescendant = function (child) {
   var x = $3265389822_$2537101590_fm.currentFocus.x.mid
   var y = $3265389822_$2537101590_fm.currentFocus.y.mid
   var children
   while (children = child.children) {
-    for (var i = children.length - 1, diff = (void 0); i >= 0; i--) {
+    for (var i = 0, l = children.length, diff = (void 0); i < l; i++) {
       var next = children[i]
       var a = x - next.x.mid
       var b = y - next.y.mid
@@ -28,25 +26,31 @@ var $3265389822_$2537101590_findClosestDescendant = function (child) {
   return child
 }
 
+var $3265389822_$2537101590_focusElement = function (element) {
+  if (element.focusIn(element) !== false) {
+    $3265389822_$2537101590_fm.currentFocus.focusOut($3265389822_$2537101590_fm.currentFocus)
+    $3265389822_$2537101590_fm.currentFocus = element
+    return element
+  }
+}
+
 var $3265389822_$2537101590_changeFocus = function (direction, delta) {
   var target = $3265389822_$2537101590_fm.currentFocus
+  var parent = target.parent
   // walk up from currentFocus
-  while (target) {
-    if (target.direction === direction) {
-      var siblings = target.parent.children
+  while (parent) {
+    if (parent.direction === direction) {
+      var siblings = parent.children
       var sibling = target
       // if direction is correct walk (delta) sibling
       while (sibling = siblings[sibling.index + delta]) {
         var child = $3265389822_$2537101590_findClosestDescendant(sibling)
-        // if child focusIn doesnt cancel (returns false), complete transaction
-        if (child.focusIn(child) !== false) {
-          $3265389822_$2537101590_fm.currentFocus.focusOut($3265389822_$2537101590_fm.currentFocus)
-          $3265389822_$2537101590_fm.currentFocus = child
-          return
-        }
+        // if new focus return
+        if ($3265389822_$2537101590_focusElement(child)) { return }
       }
     }
-    target = target.parent
+    target = parent
+    parent = parent.parent
   }
 }
 
@@ -98,40 +102,26 @@ var $3265389822_$2537101590_autoFocus = function (set) {
   }
 }
 
-var $3265389822_$2537101590_updatePositioningUpwards = function (set, parent) {
-  while (parent.x) {
-    var xChanged = (void 0), yChanged = (void 0)
-    if (parent.x.start === void 0 || parent.x.start > set.x.start) {
-      parent.x.start = set.x.start
-      xChanged = true
+var $3265389822_$2537101590_updatePosition = function (parent, axis, set) {
+  var changed
+  if (axis in parent) {
+    if (parent[axis].start === void 0 || parent[axis].start > set[axis].start) {
+      parent[axis].start = set[axis].start
+      changed = true
     }
-    if (parent.x.end === void 0 || parent.x.end < set.x.end) {
-      parent.x.end = set.x.end
-      xChanged = true
+    if (parent[axis].end === void 0 || parent[axis].end < set[axis].end) {
+      parent[axis].end = set[axis].end
+      changed = true
     }
-    if (parent.y.start === void 0 || parent.y.start > set.y.start) {
-      parent.y.start = set.y.start
-      yChanged = true
+    if (changed) {
+      parent[axis].mid = parent[axis].start + (parent[axis].end - parent[axis].start) / 2
     }
-    if (parent.y.end === void 0 || parent.y.end < set.y.end) {
-      parent.y.end = set.y.end
-      yChanged = true
-    }
-    if (!xChanged && !yChanged) {
-      break
-    }
-    if (xChanged) {
-      parent.x.mid = parent.x.start + (parent.x.end - parent.x.start) / 2
-    }
-    if (yChanged) {
-      parent.y.mid = parent.y.start + (parent.y.end - parent.y.start) / 2
-    }
-    parent = parent.parent
   }
+  return changed
 }
 
-var $3265389822_$2537101590_getStartPosition = function (set, parent, direction, index) {
-  if (direction === 'x') {
+var $3265389822_$2537101590_getStartPosition = function (set, parent, index) {
+  if (parent.direction === 'x') {
     return {
       x: set.x === void 0
       ? index ? parent.children[index - 1].x.end : parent.x ? parent.x.start : 0
@@ -154,36 +144,32 @@ var $3265389822_$2537101590_getStartPosition = function (set, parent, direction,
 
 var $3265389822_$2537101590_setOnPosition = function (coordinates, set) {
   var parent = $3265389822_$2537101590_fm
-  var direction = 'x'
   var index = coordinates[0]
 
   for (var i = 0, n = coordinates.length - 1; i < n;) {
     if (!parent.children[index]) {
-      var ref = $3265389822_$2537101590_getStartPosition(set, parent, direction, index);
+      var ref = $3265389822_$2537101590_getStartPosition(set, parent, index);
       var x$1 = ref.x;
       var y$1 = ref.y;
       parent.children[index] = {
         x: { start: x$1 },
         y: { start: y$1 },
         children: [],
-        direction: direction,
+        direction: parent.direction === 'x' ? 'y' : 'x',
         index: index,
         parent: parent
       }
     }
     parent = parent.children[index]
-    children = parent.children
-    direction = direction === 'x' ? 'y' : 'x'
     index = coordinates[++i]
   }
 
-  var ref$1 = $3265389822_$2537101590_getStartPosition(set, parent, direction, index);
+  var ref$1 = $3265389822_$2537101590_getStartPosition(set, parent, index);
   var x = ref$1.x;
   var y = ref$1.y;
 
   set.index = index
   set.parent = parent
-  set.direction = direction
   set.x = {
     start: x,
     mid: x + (set.width || 1) / 2,
@@ -195,22 +181,35 @@ var $3265389822_$2537101590_setOnPosition = function (coordinates, set) {
     end: y + (set.height || 1)
   }
   parent.children[index] = set
-  $3265389822_$2537101590_updatePositioningUpwards(set, parent)
+
+  // update the positions based on last set
+  while (parent) {
+    var xChanged = $3265389822_$2537101590_updatePosition(parent, 'x', set)
+    var yChanged = $3265389822_$2537101590_updatePosition(parent, 'y', set)
+    if (!xChanged && !yChanged) { break }
+    parent = parent.parent
+  }
 }
 
 var $3265389822_$2537101590_fm = {
   currentFocus: false,
   children: [],
   /*
+    starting direction
+  */
+  direction: 'x',
+  /*
     register element, this can happen on eg. render
     params:
     - coordinates (obj) eg [0,0,0]
-    - set (obj) eg { state, x, y, focusIn, focusUpdate, focusOut }
+    - element (obj) eg { state, x, y, focusIn, focusUpdate, focusOut }
+    returns element
   */
-  register: function register (coordinates, set) {
+  register: function register (coordinates, element) {
     $3265389822_$2537101590_addEventListeners()
-    $3265389822_$2537101590_setOnPosition(coordinates, set)
-    $3265389822_$2537101590_autoFocus(set)
+    $3265389822_$2537101590_setOnPosition(coordinates, element)
+    $3265389822_$2537101590_autoFocus(element)
+    return element
   },
   /*
     unregister element, this can happen on eg. remove
@@ -229,7 +228,28 @@ var $3265389822_$2537101590_fm = {
   */
   update: function update (coordinates, set) {
     console.log('- update', coordinates, set)
-  }
+  },
+  /*
+    focus element
+    params:
+    - coordinates (obj) eg [0,0,0]
+    OR
+    - element (obj)
+    returns element if new focus
+  */
+  focus: function focus (element) {
+    if (Array.isArray(element)) {
+      var children = $3265389822_$2537101590_fm.children
+      var target
+      for (var i = 0, l = element.length; i < l; i++) {
+        target = children[element[i]]
+        if (!target) { return }
+        children = target.children
+      }
+      element = target
+    }
+    return $3265389822_$2537101590_focusElement(element)
+  },
 }
 
 var $3265389822_$2537101590 = $3265389822_$2537101590_fm
@@ -246,13 +266,13 @@ var $1598400738_focusIn = function (ref) {
   var node = ref.node;
   var x = ref.x;
   var y = ref.y;
-  var direction = ref.direction;
+  var parent = ref.parent;
 
   node.style.background = 'red'
-  node.style.fontSize = '12px'
+  node.style.fontSize = '10px'
   node.innerHTML = 'x:' + JSON.stringify(x) +
     '<br/> y:' + JSON.stringify(y) +
-    '<br/> direction:' + JSON.stringify(direction)
+    '<br/> parent.direction:' + JSON.stringify(parent.direction)
 }
 var $1598400738_focusOut = function (ref) {
 var node = ref.node;
