@@ -5,29 +5,34 @@ const $2537101590_keys = {
   40: 'down'
 }
 
+const $2537101590_log = obj => JSON.stringify(obj, (key, value) => key !== 'parent' ? value : void 0, 2)
 const $2537101590_moveFocus = (direction, delta) => {
   if (direction) {
-    const currentPos = $2537101590_fm.currentFocus.yMid
+    const perpendicular = direction === 'y' ? 'x' : 'y'
     let target = $2537101590_fm.currentFocus
     while (target) {
       const parent = target.parent
       if (target.direction === direction) {
         const siblings = parent.children
         let sibling = target
+
         while (sibling = siblings[sibling.index + delta]) {
           let child = sibling
           let children
+
           while (children = child.children) {
-            // get correct child based on position
-            for (let i = children.length - 1, d; i >= 0; i--) {
+            for (let i = children.length - 1, diff; i >= 0; i--) {
               const next = children[i]
-              const diff = Math.abs(currentPos - (next.yMid || 0))
-              if (d === void 0 || diff < d) {
+              const a = $2537101590_fm.currentFocus[perpendicular].mid - next[perpendicular].mid
+              const b = $2537101590_fm.currentFocus[direction].mid - next[direction].mid
+              const c = Math.sqrt(a * a + b * b)
+              if (diff === void 0 || c < diff) {
                 child = next
-                d = diff
+                diff = c
               }
             }
           }
+
           if (child.focusIn(child) !== false) {
             $2537101590_fm.currentFocus.focusOut($2537101590_fm.currentFocus)
             $2537101590_fm.currentFocus = child
@@ -88,41 +93,88 @@ const $2537101590_autoFocus = set => {
 const $2537101590_setOnPosition = (coordinates, set) => {
   var children = $2537101590_fm.children
   var parent = $2537101590_fm
-  var onYAxis
+  var direction = 'x'
 
   for (var i = 0, n = coordinates.length - 1; i <= n; i++) {
     const index = coordinates[i]
+
+    let startX, startY
+    if (direction === 'x') {
+      startX = set.x === void 0
+        ? index ? children[index - 1].x.end : parent.x ? parent.x.start : 0
+        : set.x
+      startY = set.y === void 0
+        ? parent.y ? parent.y.start : 0
+        : set.y
+    } else {
+      startX = set.x === void 0
+        ? parent.x ? parent.x.start : 0
+        : set.x
+      startY = set.y === void 0
+        ? index ? children[index - 1].y.end : parent.y ? parent.y.start : 0
+        : set.y
+    }
+
     if (i === n) {
       set.index = index
       set.parent = parent
-      set.direction = onYAxis ? 'y' : 'x'
-      // include more in absolute pos (like other rows in the matrix)
-      if (set.y === void 0) {
-        const previous = children[index - 1]
-        set.y = (previous && previous.yEnd) || index
+      set.direction = direction
+      set.x = {
+        start: startX,
+        mid: startX + (set.width || 1) / 2,
+        end: startX + (set.width || 1)
       }
-      if (set.yEnd === void 0) {
-        set.yEnd = set.y + (set.height || 1)
+      set.y = {
+        start: startY,
+        mid: startY + (set.height || 1) / 2,
+        end: startY + (set.height || 1)
       }
-      if (set.height === void 0) {
-        set.height = set.yEnd - set.y
-      }
-      if (set.yMid === void 0) {
-        set.yMid = set.y + set.height / 2
-      }
+
       children[index] = set
+
+      while (parent.x) {
+        let xChanged, yChanged
+        if (parent.x.start === void 0 || parent.x.start > set.x.start) {
+          parent.x.start = set.x.start
+          xChanged = true
+        }
+        if (parent.x.end === void 0 || parent.x.end < set.x.end) {
+          parent.x.end = set.x.end
+          xChanged = true
+        }
+        if (parent.y.start === void 0 || parent.y.start > set.y.start) {
+          parent.y.start = set.y.start
+          yChanged = true
+        }
+        if (parent.y.end === void 0 || parent.y.end < set.y.end) {
+          parent.y.end = set.y.end
+          yChanged = true
+        }
+        if (!xChanged && !yChanged) {
+          break
+        }
+        if (xChanged) {
+          parent.x.mid = parent.x.start + (parent.x.end - parent.x.start) / 2
+        }
+        if (yChanged) {
+          parent.y.mid = parent.y.start + (parent.y.end - parent.y.start) / 2
+        }
+        parent = parent.parent
+      }
     } else {
       if (!children[index]) {
         children[index] = {
+          x: { start: startX },
+          y: { start: startY },
           children: [],
-          direction: onYAxis ? 'y' : 'x',
+          direction,
           index,
           parent
         }
       }
       parent = children[index]
       children = parent.children
-      onYAxis = !onYAxis
+      direction = direction === 'x' ? 'y' : 'x'
     }
   }
 }

@@ -27,6 +27,7 @@ li {
 }
 
 nav li {
+  width: 33%;
   display: table-cell;
 }
 
@@ -40,4 +41,5 @@ section li {
 
 * {
   border: 1px solid lightgrey;
+  box-sizing: border-box;
 }
