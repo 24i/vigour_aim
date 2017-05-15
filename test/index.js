@@ -4,12 +4,12 @@ window.fm = fm
 
 const log = obj => JSON.stringify(obj, (key, value) => key !== 'parent' ? value : void 0, 2)
 
-const focusIn = ({ node, x, y, direction }) => {
+const focusIn = ({ node, x, y, parent }) => {
   node.style.background = 'red'
-  node.style.fontSize = '12px'
+  node.style.fontSize = '10px'
   node.innerHTML = 'x:' + JSON.stringify(x) +
     '<br/> y:' + JSON.stringify(y) +
-    '<br/> direction:' + JSON.stringify(direction)
+    '<br/> parent.direction:' + JSON.stringify(parent.direction)
 }
 const focusOut = ({ node }) => { node.style.background = 'lightgrey' }
 

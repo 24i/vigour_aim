@@ -5,14 +5,12 @@ const $2537101590_keys = {
   40: 'down'
 }
 
-const $2537101590_log = obj => JSON.stringify(obj, (key, value) => key !== 'parent' ? value : void 0, 2)
-
 const $2537101590_findClosestDescendant = child => {
   const x = $2537101590_fm.currentFocus.x.mid
   const y = $2537101590_fm.currentFocus.y.mid
   var children
   while (children = child.children) {
-    for (let i = children.length - 1, diff; i >= 0; i--) {
+    for (let i = 0, l = children.length, diff; i < l; i++) {
       const next = children[i]
       const a = x - next.x.mid
       const b = y - next.y.mid
@@ -26,25 +24,31 @@ const $2537101590_findClosestDescendant = child => {
   return child
 }
 
+const $2537101590_focusElement = element => {
+  if (element.focusIn(element) !== false) {
+    $2537101590_fm.currentFocus.focusOut($2537101590_fm.currentFocus)
+    $2537101590_fm.currentFocus = element
+    return element
+  }
+}
+
 const $2537101590_changeFocus = (direction, delta) => {
   var target = $2537101590_fm.currentFocus
+  var parent = target.parent
   // walk up from currentFocus
-  while (target) {
-    if (target.direction === direction) {
-      const siblings = target.parent.children
+  while (parent) {
+    if (parent.direction === direction) {
+      const siblings = parent.children
       let sibling = target
       // if direction is correct walk (delta) sibling
       while (sibling = siblings[sibling.index + delta]) {
         const child = $2537101590_findClosestDescendant(sibling)
-        // if child focusIn doesnt cancel (returns false), complete transaction
-        if (child.focusIn(child) !== false) {
-          $2537101590_fm.currentFocus.focusOut($2537101590_fm.currentFocus)
-          $2537101590_fm.currentFocus = child
-          return
-        }
+        // if new focus return
+        if ($2537101590_focusElement(child)) return
       }
     }
-    target = target.parent
+    target = parent
+    parent = parent.parent
   }
 }
 
@@ -96,40 +100,26 @@ const $2537101590_autoFocus = set => {
   }
 }
 
-const $2537101590_updatePositioningUpwards = (set, parent) => {
-  while (parent.x) {
-    let xChanged, yChanged
-    if (parent.x.start === void 0 || parent.x.start > set.x.start) {
-      parent.x.start = set.x.start
-      xChanged = true
+const $2537101590_updatePosition = (parent, axis, set) => {
+  var changed
+  if (axis in parent) {
+    if (parent[axis].start === void 0 || parent[axis].start > set[axis].start) {
+      parent[axis].start = set[axis].start
+      changed = true
     }
-    if (parent.x.end === void 0 || parent.x.end < set.x.end) {
-      parent.x.end = set.x.end
-      xChanged = true
+    if (parent[axis].end === void 0 || parent[axis].end < set[axis].end) {
+      parent[axis].end = set[axis].end
+      changed = true
     }
-    if (parent.y.start === void 0 || parent.y.start > set.y.start) {
-      parent.y.start = set.y.start
-      yChanged = true
+    if (changed) {
+      parent[axis].mid = parent[axis].start + (parent[axis].end - parent[axis].start) / 2
     }
-    if (parent.y.end === void 0 || parent.y.end < set.y.end) {
-      parent.y.end = set.y.end
-      yChanged = true
-    }
-    if (!xChanged && !yChanged) {
-      break
-    }
-    if (xChanged) {
-      parent.x.mid = parent.x.start + (parent.x.end - parent.x.start) / 2
-    }
-    if (yChanged) {
-      parent.y.mid = parent.y.start + (parent.y.end - parent.y.start) / 2
-    }
-    parent = parent.parent
   }
+  return changed
 }
 
-const $2537101590_getStartPosition = (set, parent, direction, index) => {
-  if (direction === 'x') {
+const $2537101590_getStartPosition = (set, parent, index) => {
+  if (parent.direction === 'x') {
     return {
       x: set.x === void 0
       ? index ? parent.children[index - 1].x.end : parent.x ? parent.x.start : 0
@@ -152,32 +142,28 @@ const $2537101590_getStartPosition = (set, parent, direction, index) => {
 
 const $2537101590_setOnPosition = (coordinates, set) => {
   var parent = $2537101590_fm
-  var direction = 'x'
   var index = coordinates[0]
 
   for (let i = 0, n = coordinates.length - 1; i < n;) {
     if (!parent.children[index]) {
-      const { x, y } = $2537101590_getStartPosition(set, parent, direction, index)
+      const { x, y } = $2537101590_getStartPosition(set, parent, index)
       parent.children[index] = {
         x: { start: x },
         y: { start: y },
         children: [],
-        direction,
+        direction: parent.direction === 'x' ? 'y' : 'x',
         index,
         parent
       }
     }
     parent = parent.children[index]
-    children = parent.children
-    direction = direction === 'x' ? 'y' : 'x'
     index = coordinates[++i]
   }
 
-  const { x, y } = $2537101590_getStartPosition(set, parent, direction, index)
+  const { x, y } = $2537101590_getStartPosition(set, parent, index)
 
   set.index = index
   set.parent = parent
-  set.direction = direction
   set.x = {
     start: x,
     mid: x + (set.width || 1) / 2,
@@ -189,22 +175,35 @@ const $2537101590_setOnPosition = (coordinates, set) => {
     end: y + (set.height || 1)
   }
   parent.children[index] = set
-  $2537101590_updatePositioningUpwards(set, parent)
+
+  // update the positions based on last set
+  while (parent) {
+    const xChanged = $2537101590_updatePosition(parent, 'x', set)
+    const yChanged = $2537101590_updatePosition(parent, 'y', set)
+    if (!xChanged && !yChanged) break
+    parent = parent.parent
+  }
 }
 
 const $2537101590_fm = {
   currentFocus: false,
   children: [],
   /*
+    starting direction
+  */
+  direction: 'x',
+  /*
     register element, this can happen on eg. render
     params:
     - coordinates (obj) eg [0,0,0]
-    - set (obj) eg { state, x, y, focusIn, focusUpdate, focusOut }
+    - element (obj) eg { state, x, y, focusIn, focusUpdate, focusOut }
+    returns element
   */
-  register (coordinates, set) {
+  register (coordinates, element) {
     $2537101590_addEventListeners()
-    $2537101590_setOnPosition(coordinates, set)
-    $2537101590_autoFocus(set)
+    $2537101590_setOnPosition(coordinates, element)
+    $2537101590_autoFocus(element)
+    return element
   },
   /*
     unregister element, this can happen on eg. remove
@@ -223,7 +222,28 @@ const $2537101590_fm = {
   */
   update (coordinates, set) {
     console.log('- update', coordinates, set)
-  }
+  },
+  /*
+    focus element
+    params:
+    - coordinates (obj) eg [0,0,0]
+    OR
+    - element (obj)
+    returns element if new focus
+  */
+  focus (element) {
+    if (Array.isArray(element)) {
+      let children = $2537101590_fm.children
+      let target
+      for (let i = 0, l = element.length; i < l; i++) {
+        target = children[element[i]]
+        if (!target) return
+        children = target.children
+      }
+      element = target
+    }
+    return $2537101590_focusElement(element)
+  },
 }
 
 var $2537101590 = $2537101590_fm
