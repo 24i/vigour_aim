@@ -197,7 +197,7 @@ var $3265389822_$2537101590_fm = {
   /*
     starting direction
   */
-  direction: 'x',
+  direction: 'y',
   /*
     register element, this can happen on eg. render
     params:
@@ -282,16 +282,14 @@ var $1598400738_navItems = document.getElementsByTagName('nav')[0].getElementsBy
 var $1598400738_menuItems = document.getElementsByTagName('aside')[0].getElementsByTagName('li')
 var $1598400738_sectionItems = document.getElementsByTagName('section')[0].getElementsByTagName('li')
 
-// [x, y, x, y]
+// [y, x, y]
+$3265389822.direction = 'y'
 
-// register navitems
-for (var i = 0; i < $1598400738_navItems.length; i++) {
-  var node = $1598400738_navItems[i]
+var $1598400738_register = function (coordinates, node) {
   var rect = node.getBoundingClientRect()
-
   node.innerHTML = 'h:' + rect.height + ' | w:' + rect.width
 
-  $3265389822.register([0, 0, i], {
+  $3265389822.register(coordinates, {
     node: node,
     height: rect.height,
     width: rect.width,
@@ -300,34 +298,19 @@ for (var i = 0; i < $1598400738_navItems.length; i++) {
   })
 }
 
+// register navitems
+for (var i = 0; i < $1598400738_navItems.length; i++) {
+  $1598400738_register([0, i], $1598400738_navItems[i])
+}
+
 // register menuitems
 for (var i$1 = 0; i$1 < $1598400738_menuItems.length; i$1++) {
-  var node$1 = $1598400738_menuItems[i$1]
-  var rect$1 = node$1.getBoundingClientRect()
-  node$1.innerHTML = 'h:' + rect$1.height + ' | w:' + rect$1.width
-
-  $3265389822.register([0, 1, 0, i$1], {
-    node: node$1,
-    height: rect$1.height,
-    width: rect$1.width,
-    focusIn: $1598400738_focusIn,
-    focusOut: $1598400738_focusOut
-  })
+  $1598400738_register([1, 0, i$1], $1598400738_menuItems[i$1])
 }
 
 // register sectionitems
 for (var i$2 = 0; i$2 < $1598400738_sectionItems.length; i$2++) {
-  var node$2 = $1598400738_sectionItems[i$2]
-  var rect$2 = node$2.getBoundingClientRect()
-  node$2.innerHTML = 'h:' + rect$2.height + ' | w:' + rect$2.width
-
-  $3265389822.register([0, 1, 1, i$2], {
-    node: node$2,
-    height: rect$2.height,
-    width: rect$2.width,
-    focusIn: $1598400738_focusIn,
-    focusOut: $1598400738_focusOut
-  })
+  $1598400738_register([1, 1, i$2], $1598400738_sectionItems[i$2])
 }
 
 console.log('%cchildren:', 'font-weight: bold')

@@ -191,7 +191,7 @@ const fm = {
   /*
     starting direction
   */
-  direction: 'x',
+  direction: 'y',
   /*
     register element, this can happen on eg. render
     params:

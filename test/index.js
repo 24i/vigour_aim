@@ -17,52 +17,35 @@ const navItems = document.getElementsByTagName('nav')[0].getElementsByTagName('l
 const menuItems = document.getElementsByTagName('aside')[0].getElementsByTagName('li')
 const sectionItems = document.getElementsByTagName('section')[0].getElementsByTagName('li')
 
-// [x, y, x, y]
+// [y, x, y]
+fm.direction = 'y'
 
-// register navitems
-for (let i = 0; i < navItems.length; i++) {
-  const node = navItems[i]
+const register = (coordinates, node) => {
   const rect = node.getBoundingClientRect()
-
   node.innerHTML = 'h:' + rect.height + ' | w:' + rect.width
 
-  fm.register([0, 0, i], {
+  fm.register(coordinates, {
     node,
     height: rect.height,
     width: rect.width,
     focusIn,
     focusOut
   })
+}
+
+// register navitems
+for (let i = 0; i < navItems.length; i++) {
+  register([0, i], navItems[i])
 }
 
 // register menuitems
 for (let i = 0; i < menuItems.length; i++) {
-  const node = menuItems[i]
-  const rect = node.getBoundingClientRect()
-  node.innerHTML = 'h:' + rect.height + ' | w:' + rect.width
-
-  fm.register([0, 1, 0, i], {
-    node,
-    height: rect.height,
-    width: rect.width,
-    focusIn,
-    focusOut
-  })
+  register([1, 0, i], menuItems[i])
 }
 
 // register sectionitems
 for (let i = 0; i < sectionItems.length; i++) {
-  const node = sectionItems[i]
-  const rect = node.getBoundingClientRect()
-  node.innerHTML = 'h:' + rect.height + ' | w:' + rect.width
-
-  fm.register([0, 1, 1, i], {
-    node,
-    height: rect.height,
-    width: rect.width,
-    focusIn,
-    focusOut
-  })
+  register([1, 1, i], sectionItems[i])
 }
 
 console.log('%cchildren:', 'font-weight: bold')
