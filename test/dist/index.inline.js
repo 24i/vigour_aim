@@ -155,46 +155,47 @@ var $3265389822_$2537101590_getStartPosition = function (set, parent, direction,
 var $3265389822_$2537101590_setOnPosition = function (coordinates, set) {
   var parent = $3265389822_$2537101590_fm
   var direction = 'x'
-  for (var i = 0, n = coordinates.length - 1; i <= n; i++) {
-    var index = coordinates[i]
-    if (i === n) {
+  var index = coordinates[0]
+
+  for (var i = 0, n = coordinates.length - 1; i < n;) {
+    if (!parent.children[index]) {
       var ref = $3265389822_$2537101590_getStartPosition(set, parent, direction, index);
-      var x = ref.x;
-      var y = ref.y;
-      set.index = index
-      set.parent = parent
-      set.direction = direction
-      set.x = {
-        start: x,
-        mid: x + (set.width || 1) / 2,
-        end: x + (set.width || 1)
+      var x$1 = ref.x;
+      var y$1 = ref.y;
+      parent.children[index] = {
+        x: { start: x$1 },
+        y: { start: y$1 },
+        children: [],
+        direction: direction,
+        index: index,
+        parent: parent
       }
-      set.y = {
-        start: y,
-        mid: y + (set.height || 1) / 2,
-        end: y + (set.height || 1)
-      }
-      parent.children[index] = set
-      $3265389822_$2537101590_updatePositioningUpwards(set, parent)
-    } else {
-      if (!parent.children[index]) {
-        var ref$1 = $3265389822_$2537101590_getStartPosition(set, parent, direction, index);
-        var x$1 = ref$1.x;
-        var y$1 = ref$1.y;
-        parent.children[index] = {
-          x: { start: x$1 },
-          y: { start: y$1 },
-          children: [],
-          direction: direction,
-          index: index,
-          parent: parent
-        }
-      }
-      parent = parent.children[index]
-      children = parent.children
-      direction = direction === 'x' ? 'y' : 'x'
     }
+    parent = parent.children[index]
+    children = parent.children
+    direction = direction === 'x' ? 'y' : 'x'
+    index = coordinates[++i]
   }
+
+  var ref$1 = $3265389822_$2537101590_getStartPosition(set, parent, direction, index);
+  var x = ref$1.x;
+  var y = ref$1.y;
+
+  set.index = index
+  set.parent = parent
+  set.direction = direction
+  set.x = {
+    start: x,
+    mid: x + (set.width || 1) / 2,
+    end: x + (set.width || 1)
+  }
+  set.y = {
+    start: y,
+    mid: y + (set.height || 1) / 2,
+    end: y + (set.height || 1)
+  }
+  parent.children[index] = set
+  $3265389822_$2537101590_updatePositioningUpwards(set, parent)
 }
 
 var $3265389822_$2537101590_fm = {
@@ -245,10 +246,13 @@ var $1598400738_focusIn = function (ref) {
   var node = ref.node;
   var x = ref.x;
   var y = ref.y;
+  var direction = ref.direction;
 
   node.style.background = 'red'
   node.style.fontSize = '12px'
-  node.innerHTML = 'x:' + JSON.stringify(x) + '<br/> y:' + JSON.stringify(y)
+  node.innerHTML = 'x:' + JSON.stringify(x) +
+    '<br/> y:' + JSON.stringify(y) +
+    '<br/> direction:' + JSON.stringify(direction)
 }
 var $1598400738_focusOut = function (ref) {
 var node = ref.node;

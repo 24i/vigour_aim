@@ -153,42 +153,43 @@ const $2537101590_getStartPosition = (set, parent, direction, index) => {
 const $2537101590_setOnPosition = (coordinates, set) => {
   var parent = $2537101590_fm
   var direction = 'x'
-  for (var i = 0, n = coordinates.length - 1; i <= n; i++) {
-    const index = coordinates[i]
-    if (i === n) {
+  var index = coordinates[0]
+
+  for (let i = 0, n = coordinates.length - 1; i < n;) {
+    if (!parent.children[index]) {
       const { x, y } = $2537101590_getStartPosition(set, parent, direction, index)
-      set.index = index
-      set.parent = parent
-      set.direction = direction
-      set.x = {
-        start: x,
-        mid: x + (set.width || 1) / 2,
-        end: x + (set.width || 1)
+      parent.children[index] = {
+        x: { start: x },
+        y: { start: y },
+        children: [],
+        direction,
+        index,
+        parent
       }
-      set.y = {
-        start: y,
-        mid: y + (set.height || 1) / 2,
-        end: y + (set.height || 1)
-      }
-      parent.children[index] = set
-      $2537101590_updatePositioningUpwards(set, parent)
-    } else {
-      if (!parent.children[index]) {
-        const { x, y } = $2537101590_getStartPosition(set, parent, direction, index)
-        parent.children[index] = {
-          x: { start: x },
-          y: { start: y },
-          children: [],
-          direction,
-          index,
-          parent
-        }
-      }
-      parent = parent.children[index]
-      children = parent.children
-      direction = direction === 'x' ? 'y' : 'x'
     }
+    parent = parent.children[index]
+    children = parent.children
+    direction = direction === 'x' ? 'y' : 'x'
+    index = coordinates[++i]
   }
+
+  const { x, y } = $2537101590_getStartPosition(set, parent, direction, index)
+
+  set.index = index
+  set.parent = parent
+  set.direction = direction
+  set.x = {
+    start: x,
+    mid: x + (set.width || 1) / 2,
+    end: x + (set.width || 1)
+  }
+  set.y = {
+    start: y,
+    mid: y + (set.height || 1) / 2,
+    end: y + (set.height || 1)
+  }
+  parent.children[index] = set
+  $2537101590_updatePositioningUpwards(set, parent)
 }
 
 const $2537101590_fm = {
