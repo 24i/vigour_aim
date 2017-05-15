@@ -1,8 +1,28 @@
 const keys = {
-  37: 'left',
-  38: 'up',
-  39: 'right',
-  40: 'down'
+  37: {
+    value: 'left',
+    direction: 'x',
+    delta: -1,
+    opposite: 'right'
+  },
+  38: {
+    value: 'up',
+    direction: 'y',
+    delta: -1,
+    opposite: 'down'
+  },
+  39: {
+    value: 'right',
+    direction: 'x',
+    delta: 1,
+    opposite: 'left'
+  },
+  40: {
+    value: 'down',
+    direction: 'y',
+    delta: 1,
+    opposite: 'up'
+  }
 }
 
 const findClosestDescendant = child => {
@@ -60,23 +80,8 @@ const onKeyDown = event => {
       ? focusUpdate(fm.currentFocus)
       : false
     if (handledByElement === false) {
-      let delta, direction
-      if (key === 'up') {
-        direction = 'y'
-        delta = -1
-      } else if (key === 'down') {
-        direction = 'y'
-        delta = 1
-      } else if (key === 'left') {
-        direction = 'x'
-        delta = -1
-      } else if (key === 'right') {
-        direction = 'x'
-        delta = 1
-      }
-      if (direction) {
-        changeFocus(direction, delta)
-      }
+      const { delta, direction } = key
+      if (direction) changeFocus(direction, delta)
     }
   }
 }
@@ -144,6 +149,7 @@ const setOnPosition = (coordinates, set) => {
   var parent = fm
   var index = coordinates[0]
 
+  // set the required infos on the element
   for (let i = 0, n = coordinates.length - 1; i < n;) {
     if (!parent.children[index]) {
       const { x, y } = getStartPosition(set, parent, index)
@@ -160,8 +166,8 @@ const setOnPosition = (coordinates, set) => {
     index = coordinates[++i]
   }
 
+  // set the required infos on the element
   const { x, y } = getStartPosition(set, parent, index)
-
   set.index = index
   set.parent = parent
   set.x = {

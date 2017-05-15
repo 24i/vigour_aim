@@ -16,7 +16,7 @@ const focusOut = ({ node }) => { node.style.background = 'lightgrey' }
 const navItems = document.getElementsByTagName('nav')[0].getElementsByTagName('li')
 const menuItems = document.getElementsByTagName('aside')[0].getElementsByTagName('li')
 const sectionItems = document.getElementsByTagName('section')[0].getElementsByTagName('li')
-
+const bottomItems = document.getElementsByTagName('nav')[1].getElementsByTagName('li')
 // [y, x, y]
 fm.direction = 'y'
 
@@ -46,6 +46,11 @@ for (let i = 0; i < menuItems.length; i++) {
 // register sectionitems
 for (let i = 0; i < sectionItems.length; i++) {
   register([1, 1, i], sectionItems[i])
+}
+
+// register bottomitems
+for (let i = 0; i < bottomItems.length; i++) {
+  register([2, i], bottomItems[i])
 }
 
 console.log('%cchildren:', 'font-weight: bold')
