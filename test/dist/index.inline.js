@@ -8,74 +8,80 @@ var $3265389822_$2537101590_keys = {
 }
 
 var $3265389822_$2537101590_log = function (obj) { return JSON.stringify(obj, function (key, value) { return key !== 'parent' ? value : void 0; }, 2); }
-var $3265389822_$2537101590_moveFocus = function (direction, delta) {
-  if (direction) {
-    var perpendicular = direction === 'y' ? 'x' : 'y'
-    var target = $3265389822_$2537101590_fm.currentFocus
-    while (target) {
-      var parent = target.parent
-      if (target.direction === direction) {
-        var siblings = parent.children
-        var sibling = target
 
-        while (sibling = siblings[sibling.index + delta]) {
-          var child = sibling
-          var children = (void 0)
+var $3265389822_$2537101590_findClosestDescendant = function (child) {
+  var x = $3265389822_$2537101590_fm.currentFocus.x.mid
+  var y = $3265389822_$2537101590_fm.currentFocus.y.mid
+  var children
+  while (children = child.children) {
+    for (var i = children.length - 1, diff = (void 0); i >= 0; i--) {
+      var next = children[i]
+      var a = x - next.x.mid
+      var b = y - next.y.mid
+      var c = Math.sqrt(a * a + b * b)
+      if (diff === void 0 || c < diff) {
+        child = next
+        diff = c
+      }
+    }
+  }
+  return child
+}
 
-          while (children = child.children) {
-            for (var i = children.length - 1, diff = (void 0); i >= 0; i--) {
-              var next = children[i]
-              var a = $3265389822_$2537101590_fm.currentFocus[perpendicular].mid - next[perpendicular].mid
-              var b = $3265389822_$2537101590_fm.currentFocus[direction].mid - next[direction].mid
-              var c = Math.sqrt(a * a + b * b)
-              if (diff === void 0 || c < diff) {
-                child = next
-                diff = c
-              }
-            }
-          }
-
-          if (child.focusIn(child) !== false) {
-            $3265389822_$2537101590_fm.currentFocus.focusOut($3265389822_$2537101590_fm.currentFocus)
-            $3265389822_$2537101590_fm.currentFocus = child
-            return
-          }
+var $3265389822_$2537101590_changeFocus = function (direction, delta) {
+  var target = $3265389822_$2537101590_fm.currentFocus
+  // walk up from currentFocus
+  while (target) {
+    if (target.direction === direction) {
+      var siblings = target.parent.children
+      var sibling = target
+      // if direction is correct walk (delta) sibling
+      while (sibling = siblings[sibling.index + delta]) {
+        var child = $3265389822_$2537101590_findClosestDescendant(sibling)
+        // if child focusIn doesnt cancel (returns false), complete transaction
+        if (child.focusIn(child) !== false) {
+          $3265389822_$2537101590_fm.currentFocus.focusOut($3265389822_$2537101590_fm.currentFocus)
+          $3265389822_$2537101590_fm.currentFocus = child
+          return
         }
       }
-      target = parent
+    }
+    target = target.parent
+  }
+}
+
+var $3265389822_$2537101590_onKeyDown = function (event) {
+  var key = $3265389822_$2537101590_keys[event.keyCode]
+  if (key) {
+    var focusUpdate = $3265389822_$2537101590_fm.currentFocus.focusUpdate
+    var handledByElement = focusUpdate
+      ? focusUpdate($3265389822_$2537101590_fm.currentFocus)
+      : false
+    if (handledByElement === false) {
+      var delta, direction
+      if (key === 'up') {
+        direction = 'y'
+        delta = -1
+      } else if (key === 'down') {
+        direction = 'y'
+        delta = 1
+      } else if (key === 'left') {
+        direction = 'x'
+        delta = -1
+      } else if (key === 'right') {
+        direction = 'x'
+        delta = 1
+      }
+      if (direction) {
+        $3265389822_$2537101590_changeFocus(direction, delta)
+      }
     }
   }
 }
 
 var $3265389822_$2537101590_addEventListeners = function () {
   if (!$3265389822_$2537101590_fm.addedListeners) {
-    var onKeyDown = function (event) {
-      var key = $3265389822_$2537101590_keys[event.keyCode]
-      if (key) {
-        var focusUpdate = $3265389822_$2537101590_fm.currentFocus.focusUpdate
-        var handledByElement = focusUpdate
-          ? focusUpdate($3265389822_$2537101590_fm.currentFocus)
-          : false
-        if (handledByElement === false) {
-          var delta, direction
-          if (key === 'up') {
-            direction = 'y'
-            delta = -1
-          } else if (key === 'down') {
-            direction = 'y'
-            delta = 1
-          } else if (key === 'left') {
-            direction = 'x'
-            delta = -1
-          } else if (key === 'right') {
-            direction = 'x'
-            delta = 1
-          }
-          $3265389822_$2537101590_moveFocus(direction, delta)
-        }
-      }
-    }
-    global.addEventListener('keydown', onKeyDown)
+    global.addEventListener('keydown', $3265389822_$2537101590_onKeyDown)
     $3265389822_$2537101590_fm.addedListeners = true
   }
 }
@@ -92,89 +98,99 @@ var $3265389822_$2537101590_autoFocus = function (set) {
   }
 }
 
+var $3265389822_$2537101590_updatePositioningUpwards = function (set, parent) {
+  while (parent.x) {
+    var xChanged = (void 0), yChanged = (void 0)
+    if (parent.x.start === void 0 || parent.x.start > set.x.start) {
+      parent.x.start = set.x.start
+      xChanged = true
+    }
+    if (parent.x.end === void 0 || parent.x.end < set.x.end) {
+      parent.x.end = set.x.end
+      xChanged = true
+    }
+    if (parent.y.start === void 0 || parent.y.start > set.y.start) {
+      parent.y.start = set.y.start
+      yChanged = true
+    }
+    if (parent.y.end === void 0 || parent.y.end < set.y.end) {
+      parent.y.end = set.y.end
+      yChanged = true
+    }
+    if (!xChanged && !yChanged) {
+      break
+    }
+    if (xChanged) {
+      parent.x.mid = parent.x.start + (parent.x.end - parent.x.start) / 2
+    }
+    if (yChanged) {
+      parent.y.mid = parent.y.start + (parent.y.end - parent.y.start) / 2
+    }
+    parent = parent.parent
+  }
+}
+
+var $3265389822_$2537101590_getStartPosition = function (set, parent, direction, index) {
+  if (direction === 'x') {
+    return {
+      x: set.x === void 0
+      ? index ? parent.children[index - 1].x.end : parent.x ? parent.x.start : 0
+      : set.x,
+      y: set.y === void 0
+      ? parent.y ? parent.y.start : 0
+      : set.y
+    }
+  } else {
+    return {
+      x: set.x === void 0
+      ? parent.x ? parent.x.start : 0
+      : set.x,
+      y: set.y === void 0
+      ? index ? parent.children[index - 1].y.end : parent.y ? parent.y.start : 0
+      : set.y
+    }
+  }
+}
+
 var $3265389822_$2537101590_setOnPosition = function (coordinates, set) {
-  var children = $3265389822_$2537101590_fm.children
   var parent = $3265389822_$2537101590_fm
   var direction = 'x'
-
   for (var i = 0, n = coordinates.length - 1; i <= n; i++) {
     var index = coordinates[i]
-
-    var startX = (void 0), startY = (void 0)
-    if (direction === 'x') {
-      startX = set.x === void 0
-        ? index ? children[index - 1].x.end : parent.x ? parent.x.start : 0
-        : set.x
-      startY = set.y === void 0
-        ? parent.y ? parent.y.start : 0
-        : set.y
-    } else {
-      startX = set.x === void 0
-        ? parent.x ? parent.x.start : 0
-        : set.x
-      startY = set.y === void 0
-        ? index ? children[index - 1].y.end : parent.y ? parent.y.start : 0
-        : set.y
-    }
-
     if (i === n) {
+      var ref = $3265389822_$2537101590_getStartPosition(set, parent, direction, index);
+      var x = ref.x;
+      var y = ref.y;
       set.index = index
       set.parent = parent
       set.direction = direction
       set.x = {
-        start: startX,
-        mid: startX + (set.width || 1) / 2,
-        end: startX + (set.width || 1)
+        start: x,
+        mid: x + (set.width || 1) / 2,
+        end: x + (set.width || 1)
       }
       set.y = {
-        start: startY,
-        mid: startY + (set.height || 1) / 2,
-        end: startY + (set.height || 1)
+        start: y,
+        mid: y + (set.height || 1) / 2,
+        end: y + (set.height || 1)
       }
-
-      children[index] = set
-
-      while (parent.x) {
-        var xChanged = (void 0), yChanged = (void 0)
-        if (parent.x.start === void 0 || parent.x.start > set.x.start) {
-          parent.x.start = set.x.start
-          xChanged = true
-        }
-        if (parent.x.end === void 0 || parent.x.end < set.x.end) {
-          parent.x.end = set.x.end
-          xChanged = true
-        }
-        if (parent.y.start === void 0 || parent.y.start > set.y.start) {
-          parent.y.start = set.y.start
-          yChanged = true
-        }
-        if (parent.y.end === void 0 || parent.y.end < set.y.end) {
-          parent.y.end = set.y.end
-          yChanged = true
-        }
-        if (!xChanged && !yChanged) {
-          break
-        }
-        if (xChanged) {
-          parent.x.mid = parent.x.start + (parent.x.end - parent.x.start) / 2
-        }
-        if (yChanged) {
-          parent.y.mid = parent.y.start + (parent.y.end - parent.y.start) / 2
-        }
-        parent = parent.parent
-      }
+      parent.children[index] = set
+      $3265389822_$2537101590_updatePositioningUpwards(set, parent)
     } else {
-      if (!children[index]) {
-        children[index] = {
-          x: { start: startX },
-          y: { start: startY },
+      if (!parent.children[index]) {
+        var ref$1 = $3265389822_$2537101590_getStartPosition(set, parent, direction, index);
+        var x$1 = ref$1.x;
+        var y$1 = ref$1.y;
+        parent.children[index] = {
+          x: { start: x$1 },
+          y: { start: y$1 },
           children: [],
           direction: direction,
           index: index,
           parent: parent
         }
       }
-      parent = children[index]
+      parent = parent.children[index]
       children = parent.children
       direction = direction === 'x' ? 'y' : 'x'
     }
@@ -248,8 +264,6 @@ var $1598400738_sectionItems = document.getElementsByTagName('section')[0].getEl
 for (var i = 0; i < $1598400738_navItems.length; i++) {
   var node = $1598400738_navItems[i]
   var rect = node.getBoundingClientRect()
-
-  console.log(node)
 
   node.innerHTML = 'h:' + rect.height + ' | w:' + rect.width
 

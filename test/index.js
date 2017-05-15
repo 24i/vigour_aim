@@ -22,8 +22,6 @@ for (let i = 0; i < navItems.length; i++) {
   const node = navItems[i]
   const rect = node.getBoundingClientRect()
 
-  console.log(node)
-
   node.innerHTML = 'h:' + rect.height + ' | w:' + rect.width
 
   fm.register([0, 0, i], {
