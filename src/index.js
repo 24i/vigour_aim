@@ -6,73 +6,79 @@ const keys = {
 }
 
 const log = obj => JSON.stringify(obj, (key, value) => key !== 'parent' ? value : void 0, 2)
-const moveFocus = (direction, delta) => {
-  if (direction) {
-    const perpendicular = direction === 'y' ? 'x' : 'y'
-    let target = fm.currentFocus
-    while (target) {
-      const parent = target.parent
-      if (target.direction === direction) {
-        const siblings = parent.children
-        let sibling = target
 
-        while (sibling = siblings[sibling.index + delta]) {
-          let child = sibling
-          let children
+const findClosestDescendant = child => {
+  const x = fm.currentFocus.x.mid
+  const y = fm.currentFocus.y.mid
+  var children
+  while (children = child.children) {
+    for (let i = children.length - 1, diff; i >= 0; i--) {
+      const next = children[i]
+      const a = x - next.x.mid
+      const b = y - next.y.mid
+      const c = Math.sqrt(a * a + b * b)
+      if (diff === void 0 || c < diff) {
+        child = next
+        diff = c
+      }
+    }
+  }
+  return child
+}
 
-          while (children = child.children) {
-            for (let i = children.length - 1, diff; i >= 0; i--) {
-              const next = children[i]
-              const a = fm.currentFocus[perpendicular].mid - next[perpendicular].mid
-              const b = fm.currentFocus[direction].mid - next[direction].mid
-              const c = Math.sqrt(a * a + b * b)
-              if (diff === void 0 || c < diff) {
-                child = next
-                diff = c
-              }
-            }
-          }
-
-          if (child.focusIn(child) !== false) {
-            fm.currentFocus.focusOut(fm.currentFocus)
-            fm.currentFocus = child
-            return
-          }
+const changeFocus = (direction, delta) => {
+  var target = fm.currentFocus
+  // walk up from currentFocus
+  while (target) {
+    if (target.direction === direction) {
+      const siblings = target.parent.children
+      let sibling = target
+      // if direction is correct walk (delta) sibling
+      while (sibling = siblings[sibling.index + delta]) {
+        const child = findClosestDescendant(sibling)
+        // if child focusIn doesnt cancel (returns false), complete transaction
+        if (child.focusIn(child) !== false) {
+          fm.currentFocus.focusOut(fm.currentFocus)
+          fm.currentFocus = child
+          return
         }
       }
-      target = parent
+    }
+    target = target.parent
+  }
+}
+
+const onKeyDown = event => {
+  const key = keys[event.keyCode]
+  if (key) {
+    const focusUpdate = fm.currentFocus.focusUpdate
+    const handledByElement = focusUpdate
+      ? focusUpdate(fm.currentFocus)
+      : false
+    if (handledByElement === false) {
+      let delta, direction
+      if (key === 'up') {
+        direction = 'y'
+        delta = -1
+      } else if (key === 'down') {
+        direction = 'y'
+        delta = 1
+      } else if (key === 'left') {
+        direction = 'x'
+        delta = -1
+      } else if (key === 'right') {
+        direction = 'x'
+        delta = 1
+      }
+      if (direction) {
+        changeFocus(direction, delta)
+      }
     }
   }
 }
 
 const addEventListeners = () => {
   if (!fm.addedListeners) {
-    const onKeyDown = event => {
-      const key = keys[event.keyCode]
-      if (key) {
-        const focusUpdate = fm.currentFocus.focusUpdate
-        const handledByElement = focusUpdate
-          ? focusUpdate(fm.currentFocus)
-          : false
-        if (handledByElement === false) {
-          let delta, direction
-          if (key === 'up') {
-            direction = 'y'
-            delta = -1
-          } else if (key === 'down') {
-            direction = 'y'
-            delta = 1
-          } else if (key === 'left') {
-            direction = 'x'
-            delta = -1
-          } else if (key === 'right') {
-            direction = 'x'
-            delta = 1
-          }
-          moveFocus(direction, delta)
-        }
-      }
-    }
     global.addEventListener('keydown', onKeyDown)
     fm.addedListeners = true
   }
@@ -90,89 +96,95 @@ const autoFocus = set => {
   }
 }
 
+const updatePositioningUpwards = (set, parent) => {
+  while (parent.x) {
+    let xChanged, yChanged
+    if (parent.x.start === void 0 || parent.x.start > set.x.start) {
+      parent.x.start = set.x.start
+      xChanged = true
+    }
+    if (parent.x.end === void 0 || parent.x.end < set.x.end) {
+      parent.x.end = set.x.end
+      xChanged = true
+    }
+    if (parent.y.start === void 0 || parent.y.start > set.y.start) {
+      parent.y.start = set.y.start
+      yChanged = true
+    }
+    if (parent.y.end === void 0 || parent.y.end < set.y.end) {
+      parent.y.end = set.y.end
+      yChanged = true
+    }
+    if (!xChanged && !yChanged) {
+      break
+    }
+    if (xChanged) {
+      parent.x.mid = parent.x.start + (parent.x.end - parent.x.start) / 2
+    }
+    if (yChanged) {
+      parent.y.mid = parent.y.start + (parent.y.end - parent.y.start) / 2
+    }
+    parent = parent.parent
+  }
+}
+
+const getStartPosition = (set, parent, direction, index) => {
+  if (direction === 'x') {
+    return {
+      x: set.x === void 0
+      ? index ? parent.children[index - 1].x.end : parent.x ? parent.x.start : 0
+      : set.x,
+      y: set.y === void 0
+      ? parent.y ? parent.y.start : 0
+      : set.y
+    }
+  } else {
+    return {
+      x: set.x === void 0
+      ? parent.x ? parent.x.start : 0
+      : set.x,
+      y: set.y === void 0
+      ? index ? parent.children[index - 1].y.end : parent.y ? parent.y.start : 0
+      : set.y
+    }
+  }
+}
+
 const setOnPosition = (coordinates, set) => {
-  var children = fm.children
   var parent = fm
   var direction = 'x'
-
   for (var i = 0, n = coordinates.length - 1; i <= n; i++) {
     const index = coordinates[i]
-
-    let startX, startY
-    if (direction === 'x') {
-      startX = set.x === void 0
-        ? index ? children[index - 1].x.end : parent.x ? parent.x.start : 0
-        : set.x
-      startY = set.y === void 0
-        ? parent.y ? parent.y.start : 0
-        : set.y
-    } else {
-      startX = set.x === void 0
-        ? parent.x ? parent.x.start : 0
-        : set.x
-      startY = set.y === void 0
-        ? index ? children[index - 1].y.end : parent.y ? parent.y.start : 0
-        : set.y
-    }
-
     if (i === n) {
+      const { x, y } = getStartPosition(set, parent, direction, index)
       set.index = index
       set.parent = parent
       set.direction = direction
       set.x = {
-        start: startX,
-        mid: startX + (set.width || 1) / 2,
-        end: startX + (set.width || 1)
+        start: x,
+        mid: x + (set.width || 1) / 2,
+        end: x + (set.width || 1)
       }
       set.y = {
-        start: startY,
-        mid: startY + (set.height || 1) / 2,
-        end: startY + (set.height || 1)
+        start: y,
+        mid: y + (set.height || 1) / 2,
+        end: y + (set.height || 1)
       }
-
-      children[index] = set
-
-      while (parent.x) {
-        let xChanged, yChanged
-        if (parent.x.start === void 0 || parent.x.start > set.x.start) {
-          parent.x.start = set.x.start
-          xChanged = true
-        }
-        if (parent.x.end === void 0 || parent.x.end < set.x.end) {
-          parent.x.end = set.x.end
-          xChanged = true
-        }
-        if (parent.y.start === void 0 || parent.y.start > set.y.start) {
-          parent.y.start = set.y.start
-          yChanged = true
-        }
-        if (parent.y.end === void 0 || parent.y.end < set.y.end) {
-          parent.y.end = set.y.end
-          yChanged = true
-        }
-        if (!xChanged && !yChanged) {
-          break
-        }
-        if (xChanged) {
-          parent.x.mid = parent.x.start + (parent.x.end - parent.x.start) / 2
-        }
-        if (yChanged) {
-          parent.y.mid = parent.y.start + (parent.y.end - parent.y.start) / 2
-        }
-        parent = parent.parent
-      }
+      parent.children[index] = set
+      updatePositioningUpwards(set, parent)
     } else {
-      if (!children[index]) {
-        children[index] = {
-          x: { start: startX },
-          y: { start: startY },
+      if (!parent.children[index]) {
+        const { x, y } = getStartPosition(set, parent, direction, index)
+        parent.children[index] = {
+          x: { start: x },
+          y: { start: y },
           children: [],
           direction,
           index,
           parent
         }
       }
-      parent = children[index]
+      parent = parent.children[index]
       children = parent.children
       direction = direction === 'x' ? 'y' : 'x'
     }
