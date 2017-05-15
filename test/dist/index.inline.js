@@ -1,10 +1,30 @@
 (function (global, process) { 
 var $3265389822_exports = {}
 var $3265389822_$2537101590_keys = {
-  37: 'left',
-  38: 'up',
-  39: 'right',
-  40: 'down'
+  37: {
+    value: 'left',
+    direction: 'x',
+    delta: -1,
+    opposite: 'right'
+  },
+  38: {
+    value: 'up',
+    direction: 'y',
+    delta: -1,
+    opposite: 'down'
+  },
+  39: {
+    value: 'right',
+    direction: 'x',
+    delta: 1,
+    opposite: 'left'
+  },
+  40: {
+    value: 'down',
+    direction: 'y',
+    delta: 1,
+    opposite: 'up'
+  }
 }
 
 var $3265389822_$2537101590_findClosestDescendant = function (child) {
@@ -62,23 +82,9 @@ var $3265389822_$2537101590_onKeyDown = function (event) {
       ? focusUpdate($3265389822_$2537101590_fm.currentFocus)
       : false
     if (handledByElement === false) {
-      var delta, direction
-      if (key === 'up') {
-        direction = 'y'
-        delta = -1
-      } else if (key === 'down') {
-        direction = 'y'
-        delta = 1
-      } else if (key === 'left') {
-        direction = 'x'
-        delta = -1
-      } else if (key === 'right') {
-        direction = 'x'
-        delta = 1
-      }
-      if (direction) {
-        $3265389822_$2537101590_changeFocus(direction, delta)
-      }
+      var delta = key.delta;
+      var direction = key.direction;
+      if (direction) { $3265389822_$2537101590_changeFocus(direction, delta) }
     }
   }
 }
@@ -146,6 +152,7 @@ var $3265389822_$2537101590_setOnPosition = function (coordinates, set) {
   var parent = $3265389822_$2537101590_fm
   var index = coordinates[0]
 
+  // set the required infos on the element
   for (var i = 0, n = coordinates.length - 1; i < n;) {
     if (!parent.children[index]) {
       var ref = $3265389822_$2537101590_getStartPosition(set, parent, index);
@@ -164,10 +171,10 @@ var $3265389822_$2537101590_setOnPosition = function (coordinates, set) {
     index = coordinates[++i]
   }
 
+  // set the required infos on the element
   var ref$1 = $3265389822_$2537101590_getStartPosition(set, parent, index);
   var x = ref$1.x;
   var y = ref$1.y;
-
   set.index = index
   set.parent = parent
   set.x = {
@@ -281,7 +288,7 @@ var node = ref.node;
 var $1598400738_navItems = document.getElementsByTagName('nav')[0].getElementsByTagName('li')
 var $1598400738_menuItems = document.getElementsByTagName('aside')[0].getElementsByTagName('li')
 var $1598400738_sectionItems = document.getElementsByTagName('section')[0].getElementsByTagName('li')
-
+var $1598400738_bottomItems = document.getElementsByTagName('nav')[1].getElementsByTagName('li')
 // [y, x, y]
 $3265389822.direction = 'y'
 
@@ -311,6 +318,11 @@ for (var i$1 = 0; i$1 < $1598400738_menuItems.length; i$1++) {
 // register sectionitems
 for (var i$2 = 0; i$2 < $1598400738_sectionItems.length; i$2++) {
   $1598400738_register([1, 1, i$2], $1598400738_sectionItems[i$2])
+}
+
+// register bottomitems
+for (var i$3 = 0; i$3 < $1598400738_bottomItems.length; i$3++) {
+  $1598400738_register([2, i$3], $1598400738_bottomItems[i$3])
 }
 
 console.log('%cchildren:', 'font-weight: bold')
