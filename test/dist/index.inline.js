@@ -7,29 +7,34 @@ var $3265389822_$2537101590_keys = {
   40: 'down'
 }
 
+var $3265389822_$2537101590_log = function (obj) { return JSON.stringify(obj, function (key, value) { return key !== 'parent' ? value : void 0; }, 2); }
 var $3265389822_$2537101590_moveFocus = function (direction, delta) {
   if (direction) {
-    var currentPos = $3265389822_$2537101590_fm.currentFocus.yMid
+    var perpendicular = direction === 'y' ? 'x' : 'y'
     var target = $3265389822_$2537101590_fm.currentFocus
     while (target) {
       var parent = target.parent
       if (target.direction === direction) {
         var siblings = parent.children
         var sibling = target
+
         while (sibling = siblings[sibling.index + delta]) {
           var child = sibling
           var children = (void 0)
+
           while (children = child.children) {
-            // get correct child based on position
-            for (var i = children.length - 1, d = (void 0); i >= 0; i--) {
+            for (var i = children.length - 1, diff = (void 0); i >= 0; i--) {
               var next = children[i]
-              var diff = Math.abs(currentPos - (next.yMid || 0))
-              if (d === void 0 || diff < d) {
+              var a = $3265389822_$2537101590_fm.currentFocus[perpendicular].mid - next[perpendicular].mid
+              var b = $3265389822_$2537101590_fm.currentFocus[direction].mid - next[direction].mid
+              var c = Math.sqrt(a * a + b * b)
+              if (diff === void 0 || c < diff) {
                 child = next
-                d = diff
+                diff = c
               }
             }
           }
+
           if (child.focusIn(child) !== false) {
             $3265389822_$2537101590_fm.currentFocus.focusOut($3265389822_$2537101590_fm.currentFocus)
             $3265389822_$2537101590_fm.currentFocus = child
@@ -90,41 +95,88 @@ var $3265389822_$2537101590_autoFocus = function (set) {
 var $3265389822_$2537101590_setOnPosition = function (coordinates, set) {
   var children = $3265389822_$2537101590_fm.children
   var parent = $3265389822_$2537101590_fm
-  var onYAxis
+  var direction = 'x'
 
   for (var i = 0, n = coordinates.length - 1; i <= n; i++) {
     var index = coordinates[i]
+
+    var startX = (void 0), startY = (void 0)
+    if (direction === 'x') {
+      startX = set.x === void 0
+        ? index ? children[index - 1].x.end : parent.x ? parent.x.start : 0
+        : set.x
+      startY = set.y === void 0
+        ? parent.y ? parent.y.start : 0
+        : set.y
+    } else {
+      startX = set.x === void 0
+        ? parent.x ? parent.x.start : 0
+        : set.x
+      startY = set.y === void 0
+        ? index ? children[index - 1].y.end : parent.y ? parent.y.start : 0
+        : set.y
+    }
+
     if (i === n) {
       set.index = index
       set.parent = parent
-      set.direction = onYAxis ? 'y' : 'x'
-      // include more in absolute pos (like other rows in the matrix)
-      if (set.y === void 0) {
-        var previous = children[index - 1]
-        set.y = (previous && previous.yEnd) || index
+      set.direction = direction
+      set.x = {
+        start: startX,
+        mid: startX + (set.width || 1) / 2,
+        end: startX + (set.width || 1)
       }
-      if (set.yEnd === void 0) {
-        set.yEnd = set.y + (set.height || 1)
+      set.y = {
+        start: startY,
+        mid: startY + (set.height || 1) / 2,
+        end: startY + (set.height || 1)
       }
-      if (set.height === void 0) {
-        set.height = set.yEnd - set.y
-      }
-      if (set.yMid === void 0) {
-        set.yMid = set.y + set.height / 2
-      }
+
       children[index] = set
+
+      while (parent.x) {
+        var xChanged = (void 0), yChanged = (void 0)
+        if (parent.x.start === void 0 || parent.x.start > set.x.start) {
+          parent.x.start = set.x.start
+          xChanged = true
+        }
+        if (parent.x.end === void 0 || parent.x.end < set.x.end) {
+          parent.x.end = set.x.end
+          xChanged = true
+        }
+        if (parent.y.start === void 0 || parent.y.start > set.y.start) {
+          parent.y.start = set.y.start
+          yChanged = true
+        }
+        if (parent.y.end === void 0 || parent.y.end < set.y.end) {
+          parent.y.end = set.y.end
+          yChanged = true
+        }
+        if (!xChanged && !yChanged) {
+          break
+        }
+        if (xChanged) {
+          parent.x.mid = parent.x.start + (parent.x.end - parent.x.start) / 2
+        }
+        if (yChanged) {
+          parent.y.mid = parent.y.start + (parent.y.end - parent.y.start) / 2
+        }
+        parent = parent.parent
+      }
     } else {
       if (!children[index]) {
         children[index] = {
+          x: { start: startX },
+          y: { start: startY },
           children: [],
-          direction: onYAxis ? 'y' : 'x',
+          direction: direction,
           index: index,
           parent: parent
         }
       }
       parent = children[index]
       children = parent.children
-      onYAxis = !onYAxis
+      direction = direction === 'x' ? 'y' : 'x'
     }
   }
 }
@@ -174,8 +226,14 @@ window.fm = $3265389822
 var $1598400738_log = function (obj) { return JSON.stringify(obj, function (key, value) { return key !== 'parent' ? value : void 0; }, 2); }
 
 var $1598400738_focusIn = function (ref) {
-var node = ref.node;
- node.style.background = 'red' }
+  var node = ref.node;
+  var x = ref.x;
+  var y = ref.y;
+
+  node.style.background = 'red'
+  node.style.fontSize = '12px'
+  node.innerHTML = 'x:' + JSON.stringify(x) + '<br/> y:' + JSON.stringify(y)
+}
 var $1598400738_focusOut = function (ref) {
 var node = ref.node;
  node.style.background = 'lightgrey' }
@@ -190,6 +248,9 @@ var $1598400738_sectionItems = document.getElementsByTagName('section')[0].getEl
 for (var i = 0; i < $1598400738_navItems.length; i++) {
   var node = $1598400738_navItems[i]
   var rect = node.getBoundingClientRect()
+
+  console.log(node)
+
   node.innerHTML = 'h:' + rect.height + ' | w:' + rect.width
 
   $3265389822.register([0, 0, i], {

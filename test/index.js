@@ -4,7 +4,11 @@ window.fm = fm
 
 const log = obj => JSON.stringify(obj, (key, value) => key !== 'parent' ? value : void 0, 2)
 
-const focusIn = ({ node }) => { node.style.background = 'red' }
+const focusIn = ({ node, x, y }) => {
+  node.style.background = 'red'
+  node.style.fontSize = '12px'
+  node.innerHTML = 'x:' + JSON.stringify(x) + '<br/> y:' + JSON.stringify(y)
+}
 const focusOut = ({ node }) => { node.style.background = 'lightgrey' }
 
 const navItems = document.getElementsByTagName('nav')[0].getElementsByTagName('li')
@@ -17,6 +21,9 @@ const sectionItems = document.getElementsByTagName('section')[0].getElementsByTa
 for (let i = 0; i < navItems.length; i++) {
   const node = navItems[i]
   const rect = node.getBoundingClientRect()
+
+  console.log(node)
+
   node.innerHTML = 'h:' + rect.height + ' | w:' + rect.width
 
   fm.register([0, 0, i], {
