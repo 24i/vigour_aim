@@ -22,7 +22,7 @@ http.createServer((req, res) => {
         ? 'text/css'
         : 'text/javascript'
       )
-      fs.readFile('.' + join(parsed.dir, parsed.base), (err, data) => {
+      fs.readFile(join(__dirname, parsed.dir, parsed.base), (err, data) => {
         if (!err) {
           res.end(data)
         } else {

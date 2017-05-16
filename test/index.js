@@ -7,15 +7,16 @@ const log = obj => JSON.stringify(obj, (key, value) => key !== 'parent' ? value 
 const focusIn = ({ node, x, y, parent }) => {
   node.style.background = 'red'
   node.style.fontSize = '10px'
-  node.innerHTML = 'x:' + JSON.stringify(x) +
-    '<br/> y:' + JSON.stringify(y) +
-    '<br/> parent.direction:' + JSON.stringify(parent.direction)
+  node.innerHTML = 'x:' + log(x) +
+    '<br/> y:' + log(y) +
+    '<br/> parent.direction:' + parent.direction
 }
 const focusOut = ({ node }) => { node.style.background = 'lightgrey' }
 
+const section = document.getElementsByTagName('section')[0]
 const navItems = document.getElementsByTagName('nav')[0].getElementsByTagName('li')
 const menuItems = document.getElementsByTagName('aside')[0].getElementsByTagName('li')
-const sectionItems = document.getElementsByTagName('section')[0].getElementsByTagName('li')
+const sectionItems = section.getElementsByTagName('li')
 const bottomItems = document.getElementsByTagName('nav')[1].getElementsByTagName('li')
 // [y, x, y]
 fm.direction = 'y'
@@ -63,6 +64,9 @@ const render = () => setTimeout(() => document.body.appendChild(fm.render({
 })))
 
 window.addEventListener('keydown', render)
+section.addEventListener('scroll', () => {
+  fm.offset(fm.get([1, 1]), 'y', -section.scrollTop)
+})
 render()
 
 console.log('%cchildren:', 'font-weight: bold')

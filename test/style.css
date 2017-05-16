@@ -17,7 +17,8 @@ aside {
 }
 
 section {
-  display: table-cell;
+  overflow: auto;
+  height: 200px;
 }
 
 li {

@@ -1,142 +1,6 @@
-const keys = {
-  37: {
-    value: 'left',
-    direction: 'x',
-    delta: -1,
-    opposite: 'right'
-  },
-  38: {
-    value: 'up',
-    direction: 'y',
-    delta: -1,
-    opposite: 'down'
-  },
-  39: {
-    value: 'right',
-    direction: 'x',
-    delta: 1,
-    opposite: 'left'
-  },
-  40: {
-    value: 'down',
-    direction: 'y',
-    delta: 1,
-    opposite: 'up'
-  }
-}
-
-const findClosestDescendant = child => {
-  const x = fm.currentFocus.x.mid
-  const y = fm.currentFocus.y.mid
-  var children
-  while ((children = child.children)) {
-    for (let i = 0, l = children.length, diff; i < l; i++) {
-      const next = children[i]
-      const a = x - next.x.mid
-      const b = y - next.y.mid
-      const c = Math.sqrt(a * a + b * b)
-      if (diff === void 0 || c < diff) {
-        child = next
-        diff = c
-      }
-    }
-  }
-  return child
-}
-
-const focusElement = element => {
-  if (element.focusIn(element) !== false) {
-    fm.currentFocus.focusOut(fm.currentFocus)
-    fm.currentFocus = element
-    return element
-  }
-}
-
-const changeFocus = (direction, delta) => {
-  var target = fm.currentFocus
-  var parent = target.parent
-  // walk up from currentFocus
-  while (parent) {
-    if (parent.direction === direction) {
-      const siblings = parent.children
-      let sibling = target
-      // if direction is correct walk (delta) sibling
-      while ((sibling = siblings[sibling.index + delta])) {
-        const child = findClosestDescendant(sibling)
-        // if new focus return
-        if (focusElement(child)) return child
-      }
-    }
-    target = parent
-    parent = parent.parent
-  }
-}
-
-const onKeyDown = event => {
-  if (event.keyCode in keys) {
-    const focusUpdate = fm.currentFocus.focusUpdate
-    const handledByElement = focusUpdate
-      ? focusUpdate(fm.currentFocus)
-      : false
-    if (handledByElement === false) {
-      const { delta, direction } = keys[event.keyCode]
-      if (direction) changeFocus(direction, delta)
-    }
-  }
-}
-
-const addEventListeners = () => {
-  if (!fm.addedListeners) {
-    global.addEventListener('keydown', onKeyDown)
-    fm.addedListeners = true
-  }
-}
-
-const autoFocus = set => {
-  if (!fm.currentFocus && !fm.autoFocusTimer) {
-    fm.autoFocusTimer = setTimeout(() => {
-      if (!fm.currentFocus) {
-        set.focusIn(set)
-        fm.currentFocus = set
-      }
-    })
-    fm.autoFocusTimer = null
-  }
-}
-
-const createBranch = (parent, index) => {
-  const container = { index }
-  if (parent.direction === 'y') {
-    const y = index ? parent.children[index - 1].y.end : parent.y.start
-    container.direction = 'x'
-    container.x = { start: parent.x.start, end: parent.x.end }
-    container.y = { start: y, end: y }
-  } else {
-    const x = index ? parent.children[index - 1].x.end : parent.x.start
-    container.direction = 'y'
-    container.x = { start: x, end: x }
-    container.y = { start: parent.y.start, end: parent.y.end }
-  }
-  container.children = []
-  container.parent = parent
-  parent.children[index] = container
-}
-
-const createLeaf = (parent, index, set) => {
-  var x, y
-  if (parent.direction === 'y') {
-    x = set.x === void 0 ? parent.x.start : set.x
-    y = set.y === void 0 ? index ? parent.children[index - 1].y.end : parent.y.start : set.y
-  } else {
-    x = set.x === void 0 ? index ? parent.children[index - 1].x.end : parent.x.start : set.x
-    y = set.y === void 0 ? parent.y.start : set.y
-  }
-  set.index = index
-  set.x = { start: x, mid: x + (set.width || 1) / 2, end: x + (set.width || 1) }
-  set.y = { start: y, mid: y + (set.height || 1) / 2, end: y + (set.height || 1) }
-  set.parent = parent
-  parent.children[index] = set
-}
+import { autoFocus, changeFocus, focusElement } from './focus'
+import { createBranch, createLeaf } from './create'
+import { addEventListeners } from './events'
 
 const updatePositions = (parent, set) => {
   while (parent) {
@@ -208,9 +72,9 @@ const fm = {
     returns element
   */
   register (coordinates, element) {
-    addEventListeners()
+    addEventListeners(fm)
     setOnPosition(coordinates, element)
-    autoFocus(element)
+    autoFocus(fm, element)
     return element
   },
   /*
@@ -221,21 +85,20 @@ const fm = {
   unregister (coordinates) {
     var child = fm
     var index, children
-    for (var i = 0, l = coordinates.length; i < l; i++) {
+    for (var i = 0, l = coordinates.length; i < l && child; i++) {
       index = coordinates[i]
       children = child.children
       child = children[index]
-      if (!child) return
     }
     if (fm.currentFocus === child) {
       const sibling = children[index ? index - 1 : index + 1]
       if (sibling) {
-        focusElement(sibling)
+        focusElement(fm, sibling)
       } else {
-        changeFocus('x', -1) ||
-          changeFocus('y', -1) ||
-            changeFocus('x', 1) ||
-              changeFocus('y', 1)
+        changeFocus(fm, 'x', -1) ||
+          changeFocus(fm, 'y', -1) ||
+            changeFocus(fm, 'x', 1) ||
+              changeFocus(fm, 'y', 1)
       }
     }
     let length
@@ -254,8 +117,14 @@ const fm = {
     - coordinates (obj) eg [0,0,0]
     - set (obj) eg { x }
   */
-  update (coordinates, set) {
-    console.log('- update', coordinates, set)
+  offset (element, axis, offset) {
+    element[axis].offset = offset
+  },
+  get (coordinates) {
+    for (var i = 0, l = coordinates.length, child = fm; i < l && child; i++) {
+      child = child.children[coordinates[i]]
+    }
+    return child
   },
   /*
     focus element
@@ -276,7 +145,7 @@ const fm = {
       }
       element = target
     }
-    return focusElement(element)
+    return focusElement(fm, element)
   },
   render (style) {
     const view = document.createElement('div')
