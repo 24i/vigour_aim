@@ -53,5 +53,22 @@ for (let i = 0; i < bottomItems.length; i++) {
   register([2, i], bottomItems[i])
 }
 
+const render = () => setTimeout(() => document.body.appendChild(fm.render({
+  position: 'fixed',
+  bottom: 0,
+  right: 0,
+  width: '200px',
+  height: '200px',
+  fontSize: '10px'
+})))
+
+window.addEventListener('keydown', render)
+render()
+
 console.log('%cchildren:', 'font-weight: bold')
 console.log(log(fm.children))
+
+window.unregister = (coordinates) => {
+  fm.unregister(coordinates)
+  render()
+}
