@@ -1,0 +1,7 @@
+{
+  "name": "@vigour-io/focus-test",
+  "scripts": {
+    "start": "node server"
+  },
+  "files": [ "dist", "index.html", "style.css", "server.js" ]
+}

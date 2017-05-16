@@ -1,4 +1,123 @@
-const $2537101590_keys = {
+const $883917132_createBranch = (parent, index) => {
+  const container = { index }
+  if (parent.direction === 'y') {
+    const y = index ? parent.children[index - 1].y.end : parent.y.start
+    container.direction = 'x'
+    container.x = { start: parent.x.start, end: parent.x.end }
+    container.y = { start: y, end: y }
+  } else {
+    const x = index ? parent.children[index - 1].x.end : parent.x.start
+    container.direction = 'y'
+    container.x = { start: x, end: x }
+    container.y = { start: parent.y.start, end: parent.y.end }
+  }
+  container.children = []
+  container.parent = parent
+  parent.children[index] = container
+}
+
+const $883917132_createLeaf = (parent, index, set) => {
+  var x, y
+  if (parent.direction === 'y') {
+    x = set.x === void 0 ? parent.x.start : set.x
+    y = set.y === void 0 ? index ? parent.children[index - 1].y.end : parent.y.start : set.y
+  } else {
+    x = set.x === void 0 ? index ? parent.children[index - 1].x.end : parent.x.start : set.x
+    y = set.y === void 0 ? parent.y.start : set.y
+  }
+  set.index = index
+  set.x = { start: x, mid: x + (set.width || 1) / 2, end: x + (set.width || 1) }
+  set.y = { start: y, mid: y + (set.height || 1) / 2, end: y + (set.height || 1) }
+  set.parent = parent
+  parent.children[index] = set
+}
+
+
+
+var $883917132_$ALL$ = {
+  createBranch: $883917132_createBranch,
+  createLeaf: $883917132_createLeaf
+}
+;const $1874855716_autoFocus = (fm, set) => {
+  if (!fm.currentFocus && !fm.autoFocusTimer) {
+    fm.autoFocusTimer = setTimeout(() => {
+      if (!fm.currentFocus) {
+        set.focusIn(set)
+        fm.currentFocus = set
+      }
+    })
+    fm.autoFocusTimer = null
+  }
+}
+
+const $1874855716_focusElement = (fm, element) => {
+  if (element.focusIn(element) !== false) {
+    fm.currentFocus.focusOut(fm.currentFocus)
+    fm.currentFocus = element
+    return element
+  }
+}
+
+const $1874855716_findClosestDescendant = (fm, child) => {
+  if ('children' in child) {
+    let current = fm.currentFocus
+    let parent = current
+    let x = current.x.mid
+    let y = current.y.mid
+    let offsetX = 0
+    let offsetY = 0
+    while ((parent = parent.parent)) {
+      if ('offset' in parent.x) x += parent.x.offset
+      if ('offset' in parent.y) y += parent.y.offset
+    }
+    let children
+    while ((children = child.children)) {
+      if ('offset' in child.x) offsetX += child.x.offset
+      if ('offset' in child.y) offsetY += child.y.offset
+      for (let i = 0, l = children.length, diff; i < l; i++) {
+        const next = children[i]
+        const a = x - next.x.mid - offsetX
+        const b = y - next.y.mid - offsetY
+        const c = Math.sqrt(a * a + b * b)
+        if (diff === void 0 || c < diff) {
+          child = next
+          diff = c
+        }
+      }
+    }
+  }
+  return child
+}
+
+const $1874855716_changeFocus = (fm, direction, delta) => {
+  var target = fm.currentFocus
+  var parent = target.parent
+  // walk up from currentFocus
+  while (parent) {
+    if (parent.direction === direction) {
+      let sibling = target
+      // if direction is correct walk (delta) sibling
+      while ((sibling = parent.children[sibling.index + delta])) {
+        const child = $1874855716_findClosestDescendant(fm, sibling)
+        // if new focus return
+        if ($1874855716_focusElement(fm, child)) return child
+      }
+    }
+    target = parent
+    parent = parent.parent
+  }
+}
+
+
+
+var $1874855716_$ALL$ = {
+  autoFocus: $1874855716_autoFocus,
+  changeFocus: $1874855716_changeFocus,
+  focusElement: $1874855716_focusElement
+}
+;
+
+const $686231703_keys = {
   37: {
     value: 'left',
     direction: 'x',
@@ -25,118 +144,32 @@ const $2537101590_keys = {
   }
 }
 
-const $2537101590_findClosestDescendant = child => {
-  const x = $2537101590_fm.currentFocus.x.mid
-  const y = $2537101590_fm.currentFocus.y.mid
-  var children
-  while ((children = child.children)) {
-    for (let i = 0, l = children.length, diff; i < l; i++) {
-      const next = children[i]
-      const a = x - next.x.mid
-      const b = y - next.y.mid
-      const c = Math.sqrt(a * a + b * b)
-      if (diff === void 0 || c < diff) {
-        child = next
-        diff = c
-      }
-    }
-  }
-  return child
-}
-
-const $2537101590_focusElement = element => {
-  if (element.focusIn(element) !== false) {
-    $2537101590_fm.currentFocus.focusOut($2537101590_fm.currentFocus)
-    $2537101590_fm.currentFocus = element
-    return element
-  }
-}
-
-const $2537101590_changeFocus = (direction, delta) => {
-  var target = $2537101590_fm.currentFocus
-  var parent = target.parent
-  // walk up from currentFocus
-  while (parent) {
-    if (parent.direction === direction) {
-      const siblings = parent.children
-      let sibling = target
-      // if direction is correct walk (delta) sibling
-      while ((sibling = siblings[sibling.index + delta])) {
-        const child = $2537101590_findClosestDescendant(sibling)
-        // if new focus return
-        if ($2537101590_focusElement(child)) return child
-      }
-    }
-    target = parent
-    parent = parent.parent
-  }
-}
-
-const $2537101590_onKeyDown = event => {
-  if (event.keyCode in $2537101590_keys) {
-    const focusUpdate = $2537101590_fm.currentFocus.focusUpdate
-    const handledByElement = focusUpdate
-      ? focusUpdate($2537101590_fm.currentFocus)
-      : false
-    if (handledByElement === false) {
-      const { delta, direction } = $2537101590_keys[event.keyCode]
-      if (direction) $2537101590_changeFocus(direction, delta)
-    }
-  }
-}
-
-const $2537101590_addEventListeners = () => {
-  if (!$2537101590_fm.addedListeners) {
-    global.addEventListener('keydown', $2537101590_onKeyDown)
-    $2537101590_fm.addedListeners = true
-  }
-}
-
-const $2537101590_autoFocus = set => {
-  if (!$2537101590_fm.currentFocus && !$2537101590_fm.autoFocusTimer) {
-    $2537101590_fm.autoFocusTimer = setTimeout(() => {
-      if (!$2537101590_fm.currentFocus) {
-        set.focusIn(set)
-        $2537101590_fm.currentFocus = set
+const $686231703_addEventListeners = fm => {
+  if (!fm.addedListeners) {
+    global.addEventListener('keydown', event => {
+      if (event.keyCode in $686231703_keys) {
+        const focusUpdate = fm.currentFocus.focusUpdate
+        const handledByElement = focusUpdate
+          ? focusUpdate(fm.currentFocus)
+          : false
+        if (handledByElement === false) {
+          const { delta, direction } = $686231703_keys[event.keyCode]
+          if (direction) $1874855716_changeFocus(fm, direction, delta)
+        }
       }
     })
-    $2537101590_fm.autoFocusTimer = null
+    fm.addedListeners = true
   }
 }
 
-const $2537101590_createBranch = (parent, index) => {
-  const container = { index }
-  if (parent.direction === 'y') {
-    const y = index ? parent.children[index - 1].y.end : parent.y.start
-    container.direction = 'x'
-    container.x = { start: parent.x.start, end: parent.x.end }
-    container.y = { start: y, end: y }
-  } else {
-    const x = index ? parent.children[index - 1].x.end : parent.x.start
-    container.direction = 'y'
-    container.x = { start: x, end: x }
-    container.y = { start: parent.y.start, end: parent.y.end }
-  }
-  container.children = []
-  container.parent = parent
-  parent.children[index] = container
-}
 
-const $2537101590_createLeaf = (parent, index, set) => {
-  var x, y
-  if (parent.direction === 'y') {
-    x = set.x === void 0 ? parent.x.start : set.x
-    y = set.y === void 0 ? index ? parent.children[index - 1].y.end : parent.y.start : set.y
-  } else {
-    x = set.x === void 0 ? index ? parent.children[index - 1].x.end : parent.x.start : set.x
-    y = set.y === void 0 ? parent.y.start : set.y
-  }
-  set.index = index
-  set.x = { start: x, mid: x + (set.width || 1) / 2, end: x + (set.width || 1) }
-  set.y = { start: y, mid: y + (set.height || 1) / 2, end: y + (set.height || 1) }
-  set.parent = parent
-  parent.children[index] = set
+
+var $686231703_$ALL$ = {
+  addEventListeners: $686231703_addEventListeners
 }
+;
+
+
 
 const $2537101590_updatePositions = (parent, set) => {
   while (parent) {
@@ -175,11 +208,11 @@ const $2537101590_setOnPosition = (coordinates, set) => {
   var parent = $2537101590_fm
   var index = coordinates[0]
   for (let i = 0, n = coordinates.length - 1; i < n;) {
-    if (!parent.children[index]) $2537101590_createBranch(parent, index)
+    if (!parent.children[index]) $883917132_createBranch(parent, index)
     parent = parent.children[index]
     index = coordinates[++i]
   }
-  $2537101590_createLeaf(parent, index, set)
+  $883917132_createLeaf(parent, index, set)
   $2537101590_updatePositions(parent, set)
 }
 
@@ -208,9 +241,9 @@ const $2537101590_fm = {
     returns element
   */
   register (coordinates, element) {
-    $2537101590_addEventListeners()
+    $686231703_addEventListeners($2537101590_fm)
     $2537101590_setOnPosition(coordinates, element)
-    $2537101590_autoFocus(element)
+    $1874855716_autoFocus($2537101590_fm, element)
     return element
   },
   /*
@@ -221,21 +254,20 @@ const $2537101590_fm = {
   unregister (coordinates) {
     var child = $2537101590_fm
     var index, children
-    for (var i = 0, l = coordinates.length; i < l; i++) {
+    for (var i = 0, l = coordinates.length; i < l && child; i++) {
       index = coordinates[i]
       children = child.children
       child = children[index]
-      if (!child) return
     }
     if ($2537101590_fm.currentFocus === child) {
       const sibling = children[index ? index - 1 : index + 1]
       if (sibling) {
-        $2537101590_focusElement(sibling)
+        $1874855716_focusElement($2537101590_fm, sibling)
       } else {
-        $2537101590_changeFocus('x', -1) ||
-          $2537101590_changeFocus('y', -1) ||
-            $2537101590_changeFocus('x', 1) ||
-              $2537101590_changeFocus('y', 1)
+        $1874855716_changeFocus($2537101590_fm, 'x', -1) ||
+          $1874855716_changeFocus($2537101590_fm, 'y', -1) ||
+            $1874855716_changeFocus($2537101590_fm, 'x', 1) ||
+              $1874855716_changeFocus($2537101590_fm, 'y', 1)
       }
     }
     let length
@@ -254,8 +286,14 @@ const $2537101590_fm = {
     - coordinates (obj) eg [0,0,0]
     - set (obj) eg { x }
   */
-  update (coordinates, set) {
-    console.log('- update', coordinates, set)
+  offset (element, axis, offset) {
+    element[axis].offset = offset
+  },
+  get (coordinates) {
+    for (var i = 0, l = coordinates.length, child = $2537101590_fm; i < l && child; i++) {
+      child = child.children[coordinates[i]]
+    }
+    return child
   },
   /*
     focus element
@@ -276,7 +314,7 @@ const $2537101590_fm = {
       }
       element = target
     }
-    return $2537101590_focusElement(element)
+    return $1874855716_focusElement($2537101590_fm, element)
   },
   render (style) {
     const view = document.createElement('div')
