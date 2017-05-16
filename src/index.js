@@ -64,7 +64,7 @@ const changeFocus = (direction, delta) => {
       while (sibling = siblings[sibling.index + delta]) {
         const child = findClosestDescendant(sibling)
         // if new focus return
-        if (focusElement(child)) return
+        if (focusElement(child)) return child
       }
     }
     target = parent
@@ -105,24 +105,6 @@ const autoFocus = set => {
   }
 }
 
-const updatePosition = (parent, axis, set) => {
-  var changed
-  if (axis in parent) {
-    if (parent[axis].start === void 0 || parent[axis].start > set[axis].start) {
-      parent[axis].start = set[axis].start
-      changed = true
-    }
-    if (parent[axis].end === void 0 || parent[axis].end < set[axis].end) {
-      parent[axis].end = set[axis].end
-      changed = true
-    }
-    if (changed) {
-      parent[axis].mid = parent[axis].start + (parent[axis].end - parent[axis].start) / 2
-    }
-  }
-  return changed
-}
-
 const getStartPosition = (set, parent, index) => {
   if (parent.direction === 'x') {
     return {
@@ -148,51 +130,90 @@ const getStartPosition = (set, parent, index) => {
 const setOnPosition = (coordinates, set) => {
   var parent = fm
   var index = coordinates[0]
+  var x, y
 
-  // set the required infos on the element
   for (let i = 0, n = coordinates.length - 1; i < n;) {
     if (!parent.children[index]) {
-      const { x, y } = getStartPosition(set, parent, index)
-      parent.children[index] = {
-        x: { start: x },
-        y: { start: y },
-        children: [],
-        direction: parent.direction === 'x' ? 'y' : 'x',
-        index,
-        parent
+      const container = { index }
+      if (parent.direction === 'y') {
+        y = index ? parent.children[index - 1].y.end : parent.y.start
+        container.direction = 'x'
+        container.x = { start: parent.x.start, end: parent.x.end }
+        container.y = { start: y, end: y }
+      } else {
+        x = index ? parent.children[index - 1].x.end : parent.x.start
+        container.direction = 'y'
+        container.x = { start: x, end: x }
+        container.y = { start: parent.y.start, end: parent.y.end }
       }
+      container.children = []
+      container.parent = parent
+      parent.children[index] = container
     }
     parent = parent.children[index]
     index = coordinates[++i]
   }
 
   // set the required infos on the element
-  const { x, y } = getStartPosition(set, parent, index)
+  if (parent.direction === 'y') {
+    x = set.x === void 0 ? parent.x.start : set.x
+    y = set.y === void 0 ? index ? parent.children[index - 1].y.end : parent.y.start : set.y
+  } else {
+    x = set.x === void 0 ? index ? parent.children[index - 1].x.end : parent.x.start : set.x
+    y = set.y === void 0 ? parent.y.start : set.y
+  }
+
   set.index = index
   set.parent = parent
-  set.x = {
-    start: x,
-    mid: x + (set.width || 1) / 2,
-    end: x + (set.width || 1)
-  }
-  set.y = {
-    start: y,
-    mid: y + (set.height || 1) / 2,
-    end: y + (set.height || 1)
-  }
+  set.x = { start: x, mid: x + (set.width || 1) / 2, end: x + (set.width || 1) }
+  set.y = { start: y, mid: y + (set.height || 1) / 2, end: y + (set.height || 1) }
   parent.children[index] = set
 
   // update the positions based on last set
   while (parent) {
-    const xChanged = updatePosition(parent, 'x', set)
-    const yChanged = updatePosition(parent, 'y', set)
-    if (!xChanged && !yChanged) break
-    parent = parent.parent
+    const changedX = updateParentPosition(parent, set, 'x')
+    const changedY = updateParentPosition(parent, set, 'y')
+    if (changedY || changedX) {
+      set = parent
+      parent = parent.parent
+    } else {
+      break
+    }
+  }
+}
+
+const updateParentPosition = (parent, set, axis) => {
+  if (axis in parent) {
+    const a = parent[axis]
+    if (a.end < set[axis].end) {
+      a.end = set[axis].end
+      a.mid = a.start + (a.end - a.start) / 2
+      // if same direction stretch siblings to same size
+      if ('parent' in parent && parent.direction === axis) {
+        const siblings = parent.parent.children
+        for (var i = siblings.length - 1; i >= 0; i--) {
+          parent = siblings[i]
+          parent[axis].end = a.end
+          parent[axis].mid = a.mid
+        }
+      }
+      return a
+    }
   }
 }
 
 const fm = {
   currentFocus: false,
+  x: {
+    start: 0,
+    mid: 0,
+    end: 0
+  },
+  y: {
+    start: 0,
+    mid: 0,
+    end: 0
+  },
   children: [],
   /*
     starting direction

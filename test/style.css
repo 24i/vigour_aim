@@ -14,12 +14,10 @@ aside {
   display: table-cell;
   width: 200px;
   height: 100%;
-  border: 1px solid red;
 }
 
 section {
   display: table-cell;
-  border: 1px solid yellow;
 }
 
 li {
@@ -40,6 +38,5 @@ section li {
 }
 
 * {
-  border: 1px solid lightgrey;
   box-sizing: border-box;
 }
