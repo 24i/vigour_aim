@@ -29,7 +29,7 @@ const findClosestDescendant = child => {
   const x = fm.currentFocus.x.mid
   const y = fm.currentFocus.y.mid
   var children
-  while (children = child.children) {
+  while ((children = child.children)) {
     for (let i = 0, l = children.length, diff; i < l; i++) {
       const next = children[i]
       const a = x - next.x.mid
@@ -61,7 +61,7 @@ const changeFocus = (direction, delta) => {
       const siblings = parent.children
       let sibling = target
       // if direction is correct walk (delta) sibling
-      while (sibling = siblings[sibling.index + delta]) {
+      while ((sibling = siblings[sibling.index + delta])) {
         const child = findClosestDescendant(sibling)
         // if new focus return
         if (focusElement(child)) return child
@@ -73,14 +73,13 @@ const changeFocus = (direction, delta) => {
 }
 
 const onKeyDown = event => {
-  const key = keys[event.keyCode]
-  if (key) {
+  if (event.keyCode in keys) {
     const focusUpdate = fm.currentFocus.focusUpdate
     const handledByElement = focusUpdate
       ? focusUpdate(fm.currentFocus)
       : false
     if (handledByElement === false) {
-      const { delta, direction } = key
+      const { delta, direction } = keys[event.keyCode]
       if (direction) changeFocus(direction, delta)
     }
   }
@@ -105,56 +104,26 @@ const autoFocus = set => {
   }
 }
 
-const getStartPosition = (set, parent, index) => {
-  if (parent.direction === 'x') {
-    return {
-      x: set.x === void 0
-      ? index ? parent.children[index - 1].x.end : parent.x ? parent.x.start : 0
-      : set.x,
-      y: set.y === void 0
-      ? parent.y ? parent.y.start : 0
-      : set.y
-    }
+const createBranch = (parent, index) => {
+  const container = { index }
+  if (parent.direction === 'y') {
+    const y = index ? parent.children[index - 1].y.end : parent.y.start
+    container.direction = 'x'
+    container.x = { start: parent.x.start, end: parent.x.end }
+    container.y = { start: y, end: y }
   } else {
-    return {
-      x: set.x === void 0
-      ? parent.x ? parent.x.start : 0
-      : set.x,
-      y: set.y === void 0
-      ? index ? parent.children[index - 1].y.end : parent.y ? parent.y.start : 0
-      : set.y
-    }
+    const x = index ? parent.children[index - 1].x.end : parent.x.start
+    container.direction = 'y'
+    container.x = { start: x, end: x }
+    container.y = { start: parent.y.start, end: parent.y.end }
   }
+  container.children = []
+  container.parent = parent
+  parent.children[index] = container
 }
 
-const setOnPosition = (coordinates, set) => {
-  var parent = fm
-  var index = coordinates[0]
+const createLeaf = (parent, index, set) => {
   var x, y
-
-  for (let i = 0, n = coordinates.length - 1; i < n;) {
-    if (!parent.children[index]) {
-      const container = { index }
-      if (parent.direction === 'y') {
-        y = index ? parent.children[index - 1].y.end : parent.y.start
-        container.direction = 'x'
-        container.x = { start: parent.x.start, end: parent.x.end }
-        container.y = { start: y, end: y }
-      } else {
-        x = index ? parent.children[index - 1].x.end : parent.x.start
-        container.direction = 'y'
-        container.x = { start: x, end: x }
-        container.y = { start: parent.y.start, end: parent.y.end }
-      }
-      container.children = []
-      container.parent = parent
-      parent.children[index] = container
-    }
-    parent = parent.children[index]
-    index = coordinates[++i]
-  }
-
-  // set the required infos on the element
   if (parent.direction === 'y') {
     x = set.x === void 0 ? parent.x.start : set.x
     y = set.y === void 0 ? index ? parent.children[index - 1].y.end : parent.y.start : set.y
@@ -162,14 +131,14 @@ const setOnPosition = (coordinates, set) => {
     x = set.x === void 0 ? index ? parent.children[index - 1].x.end : parent.x.start : set.x
     y = set.y === void 0 ? parent.y.start : set.y
   }
-
   set.index = index
-  set.parent = parent
   set.x = { start: x, mid: x + (set.width || 1) / 2, end: x + (set.width || 1) }
   set.y = { start: y, mid: y + (set.height || 1) / 2, end: y + (set.height || 1) }
+  set.parent = parent
   parent.children[index] = set
+}
 
-  // update the positions based on last set
+const updatePositions = (parent, set) => {
   while (parent) {
     const changedX = updateParentPosition(parent, set, 'x')
     const changedY = updateParentPosition(parent, set, 'y')
@@ -200,6 +169,18 @@ const updateParentPosition = (parent, set, axis) => {
       return a
     }
   }
+}
+
+const setOnPosition = (coordinates, set) => {
+  var parent = fm
+  var index = coordinates[0]
+  for (let i = 0, n = coordinates.length - 1; i < n;) {
+    if (!parent.children[index]) createBranch(parent, index)
+    parent = parent.children[index]
+    index = coordinates[++i]
+  }
+  createLeaf(parent, index, set)
+  updatePositions(parent, set)
 }
 
 const fm = {
@@ -238,8 +219,34 @@ const fm = {
     - coordinates (obj) eg [0,0,0]
   */
   unregister (coordinates) {
-    setOnPosition(coordinates, null)
-    // refocus here
+    var child = fm
+    var index, children
+    for (var i = 0, l = coordinates.length; i < l; i++) {
+      index = coordinates[i]
+      children = child.children
+      child = children[index]
+      if (!child) return
+    }
+    if (fm.currentFocus === child) {
+      const sibling = children[index ? index - 1 : index + 1]
+      if (sibling) {
+        focusElement(sibling)
+      } else {
+        changeFocus('x', -1) ||
+          changeFocus('y', -1) ||
+            changeFocus('x', 1) ||
+              changeFocus('y', 1)
+      }
+    }
+    let length
+    while ((length = children.length) === 1 && (child = child.parent)) {
+      children = child.children
+    }
+    for (let j = index + 1; j < length; j++) {
+      const child = children[j]
+      children[child.index = j - 1] = child
+    }
+    children.pop()
   },
   /*
     unregister element, this can happen on eg. remove
@@ -271,6 +278,46 @@ const fm = {
     }
     return focusElement(element)
   },
+  render (style) {
+    const view = document.createElement('div')
+    if (fm.view) {
+      fm.view.parentNode.removeChild(fm.view)
+    }
+    for (var field in style) {
+      view.style[field] = style[field]
+    }
+    render(view, fm, [])
+    return (fm.view = view)
+  }
+}
+
+const render = (root, element, coordinates) => {
+  const div = document.createElement('div')
+  const style = div.style
+
+  style.position = 'absolute'
+  style.left = element.x.start / fm.x.end * 100 + '%'
+  style.top = element.y.start / fm.y.end * 100 + '%'
+  style.width = (element.x.end - element.x.start) / fm.x.end * 100 + '%'
+  style.height = (element.y.end - element.y.start) / fm.y.end * 100 + '%'
+  style.boxSizing = 'border-box'
+  style.border = '1px solid white'
+  style.textAlign = 'center'
+  style.color = 'white'
+
+  if ('children' in element) {
+    for (let i = 0, l = element.children.length; i < l; i++) {
+      const child = element.children[i]
+      root.appendChild(render(root, child, coordinates.concat(child.index)))
+    }
+  } else {
+    div.innerHTML = JSON.stringify(coordinates)
+    style.backgroundColor = element === fm.currentFocus
+      ? 'rgba(255,0,0,0.5)'
+      : 'rgba(0,0,0,0.5)'
+  }
+
+  return div
 }
 
 export default fm
