@@ -63,7 +63,10 @@ const render = () => setTimeout(() => document.body.appendChild(fm.render({
   fontSize: '10px'
 })))
 
-window.addEventListener('keydown', render)
+window.addEventListener('keydown', e => {
+  render()
+  e.preventDefault()
+})
 section.addEventListener('scroll', () => {
   fm.offset(fm.get([1, 1]), 'y', -section.scrollTop)
 })
