@@ -1,33 +1,34 @@
 const createBranch = (parent, index) => {
-  const container = { index }
+  const b = { index, children: [], parent }
   if (parent.direction === 'y') {
-    const y = index ? parent.children[index - 1].y.end : parent.y.start
-    container.direction = 'x'
-    container.x = { start: parent.x.start, end: parent.x.end }
-    container.y = { start: y, end: y }
+    b.direction = 'x'
+    b.x = parent.x
+    b.y = index ? parent.children[index - 1].yEnd : parent.y
+    b.xEnd = parent.xEnd
+    b.yEnd = b.y
   } else {
-    const x = index ? parent.children[index - 1].x.end : parent.x.start
-    container.direction = 'y'
-    container.x = { start: x, end: x }
-    container.y = { start: parent.y.start, end: parent.y.end }
+    b.direction = 'y'
+    b.y = parent.y
+    b.x = index ? parent.children[index - 1].xEnd : parent.x
+    b.yEnd = parent.yEnd
+    b.xEnd = b.x
   }
-  container.children = []
-  container.parent = parent
-  parent.children[index] = container
+  parent.children[index] = b
 }
 
 const createLeaf = (parent, index, set) => {
-  var x, y
   if (parent.direction === 'y') {
-    x = set.x === void 0 ? parent.x.start : set.x
-    y = set.y === void 0 ? index ? parent.children[index - 1].y.end : parent.y.start : set.y
+    if (!('x' in set)) set.x = parent.x
+    if (!('y' in set)) set.y = index ? parent.children[index - 1].yEnd : parent.y
   } else {
-    x = set.x === void 0 ? index ? parent.children[index - 1].x.end : parent.x.start : set.x
-    y = set.y === void 0 ? parent.y.start : set.y
+    if (!('x' in set)) set.x = index ? parent.children[index - 1].xEnd : parent.x
+    if (!('y' in set)) set.y = parent.y
   }
   set.index = index
-  set.x = { start: x, mid: x + (set.w || 1) / 2, end: x + (set.w || 1) }
-  set.y = { start: y, mid: y + (set.h || 1) / 2, end: y + (set.h || 1) }
+  set.xMid = set.x + (set.w || 1) / 2
+  set.xEnd = set.x + (set.w || 1)
+  set.yMid = set.y + (set.h || 1) / 2
+  set.yEnd = set.y + (set.h || 1)
   set.parent = parent
   parent.children[index] = set
 }

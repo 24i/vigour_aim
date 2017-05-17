@@ -3,12 +3,12 @@ var $3265389822_exports = {}
 var $3265389822_$1874855716_autoFocus = function (aim, set) {
   if (!aim.currentFocus && !aim.autoFocusTimer) {
     aim.autoFocusTimer = setTimeout(function () {
+      aim.autoFocusTimer = null
       if (!aim.currentFocus) {
         set.onFocus(set)
         aim.currentFocus = set
       }
     })
-    aim.autoFocusTimer = null
   }
 }
 
@@ -24,22 +24,22 @@ var $3265389822_$1874855716_findClosestDescendant = function (aim, child) {
   if ('children' in child) {
     var current = aim.currentFocus
     var parent = current
-    var x = current.x.mid
-    var y = current.y.mid
-    var offsetX = 0
-    var offsetY = 0
+    var x = current.xMid
+    var y = current.yMid
+    var xOffset = 0
+    var yOffset = 0
     while ((parent = parent.parent)) {
-      if ('offset' in parent.x) { x += parent.x.offset }
-      if ('offset' in parent.y) { y += parent.y.offset }
+      if ('xOffset' in parent) { x += parent.xOffset }
+      if ('yOffset' in parent) { y += parent.yOffset }
     }
     var children
     while ((children = child.children)) {
-      if ('offset' in child.x) { offsetX += child.x.offset }
-      if ('offset' in child.y) { offsetY += child.y.offset }
+      if ('xOffset' in child) { xOffset += child.xOffset }
+      if ('yOffset' in child) { yOffset += child.yOffset }
       for (var i = 0, l = children.length, diff = (void 0); i < l; i++) {
         var next = children[i]
-        var a = x - next.x.mid - offsetX
-        var b = y - next.y.mid - offsetY
+        var a = x - next.xMid - xOffset
+        var b = y - next.yMid - yOffset
         var c = Math.sqrt(a * a + b * b)
         if (diff === void 0 || c < diff) {
           child = next
@@ -78,35 +78,36 @@ var $3265389822_$1874855716_$ALL$ = {
   focusElement: $3265389822_$1874855716_focusElement
 }
 ;var $3265389822_$883917132_createBranch = function (parent, index) {
-  var container = { index: index }
+  var b = { index: index, children: [], parent: parent }
   if (parent.direction === 'y') {
-    var y = index ? parent.children[index - 1].y.end : parent.y.start
-    container.direction = 'x'
-    container.x = { start: parent.x.start, end: parent.x.end }
-    container.y = { start: y, end: y }
+    b.direction = 'x'
+    b.x = parent.x
+    b.y = index ? parent.children[index - 1].yEnd : parent.y
+    b.xEnd = parent.xEnd
+    b.yEnd = b.y
   } else {
-    var x = index ? parent.children[index - 1].x.end : parent.x.start
-    container.direction = 'y'
-    container.x = { start: x, end: x }
-    container.y = { start: parent.y.start, end: parent.y.end }
+    b.direction = 'y'
+    b.y = parent.y
+    b.x = index ? parent.children[index - 1].xEnd : parent.x
+    b.yEnd = parent.yEnd
+    b.xEnd = b.x
   }
-  container.children = []
-  container.parent = parent
-  parent.children[index] = container
+  parent.children[index] = b
 }
 
 var $3265389822_$883917132_createLeaf = function (parent, index, set) {
-  var x, y
   if (parent.direction === 'y') {
-    x = set.x === void 0 ? parent.x.start : set.x
-    y = set.y === void 0 ? index ? parent.children[index - 1].y.end : parent.y.start : set.y
+    if (!('x' in set)) { set.x = parent.x }
+    if (!('y' in set)) { set.y = index ? parent.children[index - 1].yEnd : parent.y }
   } else {
-    x = set.x === void 0 ? index ? parent.children[index - 1].x.end : parent.x.start : set.x
-    y = set.y === void 0 ? parent.y.start : set.y
+    if (!('x' in set)) { set.x = index ? parent.children[index - 1].xEnd : parent.x }
+    if (!('y' in set)) { set.y = parent.y }
   }
   set.index = index
-  set.x = { start: x, mid: x + (set.w || 1) / 2, end: x + (set.w || 1) }
-  set.y = { start: y, mid: y + (set.h || 1) / 2, end: y + (set.h || 1) }
+  set.xMid = set.x + (set.w || 1) / 2
+  set.xEnd = set.x + (set.w || 1)
+  set.yMid = set.y + (set.h || 1) / 2
+  set.yEnd = set.y + (set.h || 1)
   set.parent = parent
   parent.children[index] = set
 }
@@ -175,35 +176,47 @@ var $3265389822_$686231703_$ALL$ = {
 
 
 
+var $3265389822_$2537101590_updateX = function (parent, set) {
+  if (parent.xEnd < set.xEnd) {
+    parent.xEnd = set.xEnd
+    parent.xMid = parent.x + (parent.xEnd - parent.x) / 2
+    if ('parent' in parent && parent.direction === 'x') {
+      var siblings = parent.parent.children
+      for (var i = siblings.length - 1; i >= 0; i--) {
+        var sibling = siblings[i]
+        sibling.xEnd = parent.xEnd
+        sibling.xMid = parent.xMid
+      }
+    }
+    return parent
+  }
+}
+
+var $3265389822_$2537101590_updateY = function (parent, set) {
+  if (parent.yEnd < set.yEnd) {
+    parent.yEnd = set.yEnd
+    parent.yMid = parent.y + (parent.yEnd - parent.y) / 2
+    if ('parent' in parent && parent.direction === 'y') {
+      var siblings = parent.parent.children
+      for (var i = siblings.length - 1; i >= 0; i--) {
+        var sibling = siblings[i]
+        sibling.yEnd = parent.yEnd
+        sibling.yMid = parent.yMid
+      }
+    }
+    return parent
+  }
+}
+
 var $3265389822_$2537101590_updatePositions = function (parent, set) {
   while (parent) {
-    var changedX = $3265389822_$2537101590_updateParentPosition(parent, set, 'x')
-    var changedY = $3265389822_$2537101590_updateParentPosition(parent, set, 'y')
+    var changedX = $3265389822_$2537101590_updateX(parent, set)
+    var changedY = $3265389822_$2537101590_updateY(parent, set)
     if (changedY || changedX) {
       set = parent
       parent = parent.parent
     } else {
       break
-    }
-  }
-}
-
-var $3265389822_$2537101590_updateParentPosition = function (parent, set, axis) {
-  if (axis in parent) {
-    var a = parent[axis]
-    if (a.end < set[axis].end) {
-      a.end = set[axis].end
-      a.mid = a.start + (a.end - a.start) / 2
-      // if same direction stretch siblings to same size
-      if ('parent' in parent && parent.direction === axis) {
-        var siblings = parent.parent.children
-        for (var i = siblings.length - 1; i >= 0; i--) {
-          parent = siblings[i]
-          parent[axis].end = a.end
-          parent[axis].mid = a.mid
-        }
-      }
-      return a
     }
   }
 }
@@ -222,16 +235,12 @@ var $3265389822_$2537101590_setOnPosition = function (position, set) {
 
 var $3265389822_$2537101590_aim = {
   currentFocus: false,
-  x: {
-    start: 0,
-    mid: 0,
-    end: 0
-  },
-  y: {
-    start: 0,
-    mid: 0,
-    end: 0
-  },
+  x: 0,
+  xMid: 0,
+  xEnd: 0,
+  y: 0,
+  yMid: 0,
+  yEnd: 0,
   children: [],
   /*
     starting direction
@@ -286,55 +295,28 @@ var $3265389822_$2537101590_aim = {
     - set (obj) eg { x }
   */
   update: function update (target, property, value, throttleTime) {
-    if ('children' in target) {
-      if (property === 'y' || property === 'x') {
-        target[property].offset = value
-      }
-    } else {
-      console.log('mission man:', property, value)
-      // @todo!
-      // do all types of repositioning etc!
-      if (property === 'h') {
-        target.y.size = value
-      } else if (property === 'w') {
-        target.x.size = value
-      } else if (property === 'y') {
-        target.y.start = value
-      } else if (property === 'x') {
-        target.x.start = value
-      }
-      // do repositioning!
-
+    target[property] = value
+    if (!('children' in target)) {
       if ($3265389822_$2537101590_aim.updateTimer) {
-        clearTimeout($3265389822_$2537101590_aim.updateTimer)
+        $3265389822_$2537101590_aim.updateTimer = clearTimeout($3265389822_$2537101590_aim.updateTimer)
       }
-
       var update = function (parent) {
         var children = parent.children
         for (var i = 0, l = children.length; i < l; i++) {
           var target = children[i]
           if ('children' in target) {
             update(target)
+          } else if (parent.direction === 'y') {
+            target.y = i ? children[i - 1].yEnd : parent.y
+            target.yMid = target.y + (target.h || 1) / 2
+            target.yEnd = target.y + (target.h || 1)
           } else {
-            if (parent.direction === 'y') {
-              var y = i ? children[i - 1].y.end : parent.y.start
-              target.y = {
-                start: y,
-                mid: y + (target.y.size || 1) / 2,
-                end: y + (target.y.size || 1)
-              }
-            } else {
-              var x = i ? children[i - 1].x.end : parent.x.start
-              target.x = {
-                start: x,
-                mid: x + (target.x.size || 1) / 2,
-                end: x + (target.x.size || 1)
-              }
-            }
+            target.x = i ? children[i - 1].xEnd : parent.x
+            target.xMid = target.x + (target.w || 1) / 2
+            target.xEnd = target.x + (target.w || 1)
           }
         }
       }
-
       $3265389822_$2537101590_aim.updateTimer = setTimeout(function () {
         update($3265389822_$2537101590_aim)
         $3265389822_$2537101590_aim.updateTimer = null
@@ -347,13 +329,14 @@ var $3265389822_$2537101590_aim = {
     }
     return child
   },
-  /*
-    focus target
-    - target (obj)
-    returns target if new focus
-  */
+  offsetX: function offsetX (target, value) {
+    target.xOffset = value
+  },
+  offsetY: function offsetY (target, value, size) {
+    target.yOffset = value
+  },
   focus: function focus (target) {
-    return $3265389822_$1874855716_focusElement($3265389822_$2537101590_aim, target)
+    if (target !== $3265389822_$2537101590_aim.currentFocus) { return $3265389822_$1874855716_focusElement($3265389822_$2537101590_aim, target) }
   },
   render: function render (style) {
     var view = document.createElement('div')
@@ -373,10 +356,10 @@ var $3265389822_$2537101590_render = function (root, target, position) {
   var style = div.style
 
   style.position = 'absolute'
-  style.left = target.x.start / $3265389822_$2537101590_aim.x.end * 100 + '%'
-  style.top = target.y.start / $3265389822_$2537101590_aim.y.end * 100 + '%'
-  style.width = (target.x.end - target.x.start) / $3265389822_$2537101590_aim.x.end * 100 + '%'
-  style.height = (target.y.end - target.y.start) / $3265389822_$2537101590_aim.y.end * 100 + '%'
+  style.left = target.x / $3265389822_$2537101590_aim.xEnd * 100 + '%'
+  style.top = target.y / $3265389822_$2537101590_aim.yEnd * 100 + '%'
+  style.width = (target.xEnd - target.x) / $3265389822_$2537101590_aim.xEnd * 100 + '%'
+  style.height = (target.yEnd - target.y) / $3265389822_$2537101590_aim.yEnd * 100 + '%'
   style.boxSizing = 'border-box'
   style.border = '1px solid white'
   style.textAlign = 'center'
@@ -477,8 +460,13 @@ window.addEventListener('keydown', function (e) {
   e.preventDefault()
 })
 
+var $4271007840_target = $3265389822.get([1, 1])
 $4271007840_section.addEventListener('scroll', function () {
-  $3265389822.update($3265389822.get([1, 1]), 'y', -$4271007840_section.scrollTop)
+  var n = $4271007840_section.scrollTop / ($4271007840_section.scrollHeight - $4271007840_section.offsetHeight)
+  n = ~~(n * $4271007840_target.children.length - 0.5)
+  $3265389822.focus($4271007840_target.children[n])
+  $3265389822.offsetY($4271007840_target, -$4271007840_section.scrollTop)
+  $4271007840_render()
 })
 
 window.addEventListener('resize', function (e) {

@@ -67,8 +67,13 @@ window.addEventListener('keydown', e => {
   e.preventDefault()
 })
 
+const target = aim.get([1, 1])
 section.addEventListener('scroll', () => {
-  aim.update(aim.get([1, 1]), 'y', -section.scrollTop)
+  var n = section.scrollTop / (section.scrollHeight - section.offsetHeight)
+  n = ~~(n * target.children.length - 0.5)
+  aim.focus(target.children[n])
+  aim.offsetY(target, -section.scrollTop)
+  render()
 })
 
 window.addEventListener('resize', e => {

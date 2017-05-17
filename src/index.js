@@ -2,35 +2,47 @@ import { autoFocus, changeFocus, focusElement } from './focus'
 import { createBranch, createLeaf } from './create'
 import { addEventListeners } from './events'
 
+const updateX = (parent, set) => {
+  if (parent.xEnd < set.xEnd) {
+    parent.xEnd = set.xEnd
+    parent.xMid = parent.x + (parent.xEnd - parent.x) / 2
+    if ('parent' in parent && parent.direction === 'x') {
+      const siblings = parent.parent.children
+      for (var i = siblings.length - 1; i >= 0; i--) {
+        const sibling = siblings[i]
+        sibling.xEnd = parent.xEnd
+        sibling.xMid = parent.xMid
+      }
+    }
+    return parent
+  }
+}
+
+const updateY = (parent, set) => {
+  if (parent.yEnd < set.yEnd) {
+    parent.yEnd = set.yEnd
+    parent.yMid = parent.y + (parent.yEnd - parent.y) / 2
+    if ('parent' in parent && parent.direction === 'y') {
+      const siblings = parent.parent.children
+      for (var i = siblings.length - 1; i >= 0; i--) {
+        const sibling = siblings[i]
+        sibling.yEnd = parent.yEnd
+        sibling.yMid = parent.yMid
+      }
+    }
+    return parent
+  }
+}
+
 const updatePositions = (parent, set) => {
   while (parent) {
-    const changedX = updateParentPosition(parent, set, 'x')
-    const changedY = updateParentPosition(parent, set, 'y')
+    const changedX = updateX(parent, set)
+    const changedY = updateY(parent, set)
     if (changedY || changedX) {
       set = parent
       parent = parent.parent
     } else {
       break
-    }
-  }
-}
-
-const updateParentPosition = (parent, set, axis) => {
-  if (axis in parent) {
-    const a = parent[axis]
-    if (a.end < set[axis].end) {
-      a.end = set[axis].end
-      a.mid = a.start + (a.end - a.start) / 2
-      // if same direction stretch siblings to same size
-      if ('parent' in parent && parent.direction === axis) {
-        const siblings = parent.parent.children
-        for (var i = siblings.length - 1; i >= 0; i--) {
-          parent = siblings[i]
-          parent[axis].end = a.end
-          parent[axis].mid = a.mid
-        }
-      }
-      return a
     }
   }
 }
@@ -49,16 +61,12 @@ const setOnPosition = (position, set) => {
 
 const aim = {
   currentFocus: false,
-  x: {
-    start: 0,
-    mid: 0,
-    end: 0
-  },
-  y: {
-    start: 0,
-    mid: 0,
-    end: 0
-  },
+  x: 0,
+  xMid: 0,
+  xEnd: 0,
+  y: 0,
+  yMid: 0,
+  yEnd: 0,
   children: [],
   /*
     starting direction
@@ -113,55 +121,28 @@ const aim = {
     - set (obj) eg { x }
   */
   update (target, property, value, throttleTime) {
-    if ('children' in target) {
-      if (property === 'y' || property === 'x') {
-        target[property].offset = value
-      }
-    } else {
-      console.log('mission man:', property, value)
-      // @todo!
-      // do all types of repositioning etc!
-      if (property === 'h') {
-        target.y.size = value
-      } else if (property === 'w') {
-        target.x.size = value
-      } else if (property === 'y') {
-        target.y.start = value
-      } else if (property === 'x') {
-        target.x.start = value
-      }
-      // do repositioning!
-
+    target[property] = value
+    if (!('children' in target)) {
       if (aim.updateTimer) {
-        clearTimeout(aim.updateTimer)
+        aim.updateTimer = clearTimeout(aim.updateTimer)
       }
-
       const update = parent => {
         var children = parent.children
         for (var i = 0, l = children.length; i < l; i++) {
           const target = children[i]
           if ('children' in target) {
             update(target)
+          } else if (parent.direction === 'y') {
+            target.y = i ? children[i - 1].yEnd : parent.y
+            target.yMid = target.y + (target.h || 1) / 2
+            target.yEnd = target.y + (target.h || 1)
           } else {
-            if (parent.direction === 'y') {
-              const y = i ? children[i - 1].y.end : parent.y.start
-              target.y = {
-                start: y,
-                mid: y + (target.y.size || 1) / 2,
-                end: y + (target.y.size || 1)
-              }
-            } else {
-              const x = i ? children[i - 1].x.end : parent.x.start
-              target.x = {
-                start: x,
-                mid: x + (target.x.size || 1) / 2,
-                end: x + (target.x.size || 1)
-              }
-            }
+            target.x = i ? children[i - 1].xEnd : parent.x
+            target.xMid = target.x + (target.w || 1) / 2
+            target.xEnd = target.x + (target.w || 1)
           }
         }
       }
-
       aim.updateTimer = setTimeout(() => {
         update(aim)
         aim.updateTimer = null
@@ -174,13 +155,14 @@ const aim = {
     }
     return child
   },
-  /*
-    focus target
-    - target (obj)
-    returns target if new focus
-  */
+  offsetX (target, value) {
+    target.xOffset = value
+  },
+  offsetY (target, value, size) {
+    target.yOffset = value
+  },
   focus (target) {
-    return focusElement(aim, target)
+    if (target !== aim.currentFocus) return focusElement(aim, target)
   },
   render (style) {
     const view = document.createElement('div')
@@ -200,10 +182,10 @@ const render = (root, target, position) => {
   const style = div.style
 
   style.position = 'absolute'
-  style.left = target.x.start / aim.x.end * 100 + '%'
-  style.top = target.y.start / aim.y.end * 100 + '%'
-  style.width = (target.x.end - target.x.start) / aim.x.end * 100 + '%'
-  style.height = (target.y.end - target.y.start) / aim.y.end * 100 + '%'
+  style.left = target.x / aim.xEnd * 100 + '%'
+  style.top = target.y / aim.yEnd * 100 + '%'
+  style.width = (target.xEnd - target.x) / aim.xEnd * 100 + '%'
+  style.height = (target.yEnd - target.y) / aim.yEnd * 100 + '%'
   style.boxSizing = 'border-box'
   style.border = '1px solid white'
   style.textAlign = 'center'

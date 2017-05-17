@@ -1,12 +1,12 @@
 const autoFocus = (aim, set) => {
   if (!aim.currentFocus && !aim.autoFocusTimer) {
     aim.autoFocusTimer = setTimeout(() => {
+      aim.autoFocusTimer = null
       if (!aim.currentFocus) {
         set.onFocus(set)
         aim.currentFocus = set
       }
     })
-    aim.autoFocusTimer = null
   }
 }
 
@@ -22,22 +22,22 @@ const findClosestDescendant = (aim, child) => {
   if ('children' in child) {
     let current = aim.currentFocus
     let parent = current
-    let x = current.x.mid
-    let y = current.y.mid
-    let offsetX = 0
-    let offsetY = 0
+    let x = current.xMid
+    let y = current.yMid
+    let xOffset = 0
+    let yOffset = 0
     while ((parent = parent.parent)) {
-      if ('offset' in parent.x) x += parent.x.offset
-      if ('offset' in parent.y) y += parent.y.offset
+      if ('xOffset' in parent) x += parent.xOffset
+      if ('yOffset' in parent) y += parent.yOffset
     }
     let children
     while ((children = child.children)) {
-      if ('offset' in child.x) offsetX += child.x.offset
-      if ('offset' in child.y) offsetY += child.y.offset
+      if ('xOffset' in child) xOffset += child.xOffset
+      if ('yOffset' in child) yOffset += child.yOffset
       for (let i = 0, l = children.length, diff; i < l; i++) {
         const next = children[i]
-        const a = x - next.x.mid - offsetX
-        const b = y - next.y.mid - offsetY
+        const a = x - next.xMid - xOffset
+        const b = y - next.yMid - yOffset
         const c = Math.sqrt(a * a + b * b)
         if (diff === void 0 || c < diff) {
           child = next
