@@ -54,7 +54,7 @@ Sets an offsetY value to (holder) target, without updating all individual child 
 | value | <code>Number</code> | New value of property |
 
 ### aim.offsetX(target, value)
-Same as **aim.offsetY** for the x axis.
+Same as **aim.offsetY()** for the x axis.
 
 ## Events
 ### onFocus(target)
