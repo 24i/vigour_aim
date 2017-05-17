@@ -233,6 +233,39 @@ var $3265389822_$2537101590_setOnPosition = function (position, set) {
   $3265389822_$2537101590_updatePositions(parent, set)
 }
 
+var $3265389822_$2537101590_reset = function (parent) {
+  if ('children' in parent) {
+    parent.xEnd = 0
+    parent.yEnd = 0
+    for (var i = parent.children.length - 1; i >= 0; i--) {
+      $3265389822_$2537101590_reset(parent.children[i])
+    }
+  }
+}
+
+var $3265389822_$2537101590_update = function (parent) {
+  var children = parent.children
+  for (var i = 0, max = children.length - 1; i <= max; i++) {
+    var target = children[i]
+    if ('children' in target) {
+      $3265389822_$2537101590_update(target)
+    } else {
+      if (parent.direction === 'y') {
+        target.y = i ? children[i - 1].yEnd : parent.y
+        target.yMid = target.y + (target.h || 1) / 2
+        target.yEnd = target.y + (target.h || 1)
+      } else {
+        target.x = i ? children[i - 1].xEnd : parent.x
+        target.xMid = target.x + (target.w || 1) / 2
+        target.xEnd = target.x + (target.w || 1)
+      }
+      if (max === i) {
+        $3265389822_$2537101590_updatePositions(parent, target)
+      }
+    }
+  }
+}
+
 var $3265389822_$2537101590_aim = {
   currentFocus: false,
   x: 0,
@@ -300,25 +333,10 @@ var $3265389822_$2537101590_aim = {
       if ($3265389822_$2537101590_aim.updateTimer) {
         $3265389822_$2537101590_aim.updateTimer = clearTimeout($3265389822_$2537101590_aim.updateTimer)
       }
-      var update = function (parent) {
-        var children = parent.children
-        for (var i = 0, l = children.length; i < l; i++) {
-          var target = children[i]
-          if ('children' in target) {
-            update(target)
-          } else if (parent.direction === 'y') {
-            target.y = i ? children[i - 1].yEnd : parent.y
-            target.yMid = target.y + (target.h || 1) / 2
-            target.yEnd = target.y + (target.h || 1)
-          } else {
-            target.x = i ? children[i - 1].xEnd : parent.x
-            target.xMid = target.x + (target.w || 1) / 2
-            target.xEnd = target.x + (target.w || 1)
-          }
-        }
-      }
+
       $3265389822_$2537101590_aim.updateTimer = setTimeout(function () {
-        update($3265389822_$2537101590_aim)
+        $3265389822_$2537101590_reset($3265389822_$2537101590_aim)
+        $3265389822_$2537101590_update($3265389822_$2537101590_aim)
         $3265389822_$2537101590_aim.updateTimer = null
       }, throttleTime)
     }

@@ -59,6 +59,39 @@ const setOnPosition = (position, set) => {
   updatePositions(parent, set)
 }
 
+const reset = parent => {
+  if ('children' in parent) {
+    parent.xEnd = 0
+    parent.yEnd = 0
+    for (var i = parent.children.length - 1; i >= 0; i--) {
+      reset(parent.children[i])
+    }
+  }
+}
+
+const update = parent => {
+  var children = parent.children
+  for (var i = 0, max = children.length - 1; i <= max; i++) {
+    const target = children[i]
+    if ('children' in target) {
+      update(target)
+    } else {
+      if (parent.direction === 'y') {
+        target.y = i ? children[i - 1].yEnd : parent.y
+        target.yMid = target.y + (target.h || 1) / 2
+        target.yEnd = target.y + (target.h || 1)
+      } else {
+        target.x = i ? children[i - 1].xEnd : parent.x
+        target.xMid = target.x + (target.w || 1) / 2
+        target.xEnd = target.x + (target.w || 1)
+      }
+      if (max === i) {
+        updatePositions(parent, target)
+      }
+    }
+  }
+}
+
 const aim = {
   currentFocus: false,
   x: 0,
@@ -126,24 +159,9 @@ const aim = {
       if (aim.updateTimer) {
         aim.updateTimer = clearTimeout(aim.updateTimer)
       }
-      const update = parent => {
-        var children = parent.children
-        for (var i = 0, l = children.length; i < l; i++) {
-          const target = children[i]
-          if ('children' in target) {
-            update(target)
-          } else if (parent.direction === 'y') {
-            target.y = i ? children[i - 1].yEnd : parent.y
-            target.yMid = target.y + (target.h || 1) / 2
-            target.yEnd = target.y + (target.h || 1)
-          } else {
-            target.x = i ? children[i - 1].xEnd : parent.x
-            target.xMid = target.x + (target.w || 1) / 2
-            target.xEnd = target.x + (target.w || 1)
-          }
-        }
-      }
+
       aim.updateTimer = setTimeout(() => {
+        reset(aim)
         update(aim)
         aim.updateTimer = null
       }, throttleTime)

@@ -37,12 +37,24 @@ Unregisters target.
 | target | <code>Object</code> | Target to unregister. |
 
 ### aim.update(target, property, value)
-Update properties for given target. Can be used when scrolling sections of the view, animating components or resizing the window.
+Update properties for given target. Can be used for repositioning / resizing targets.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| target | <code>Object</code> | Coordinates for position or target. |
+| target | <code>Object</code> | Target to update. |
 | property | <code>String</code> | Property to update, eg. <code>x</code> or <code>y</code>. |
+| value | <code>Number</code> | New value of property |
+
+### aim.offsetY(target, value)
+Sets an offsetY value to (holder) target, without updating all individual child nodes. Will be used when calculating left/up/down/right node.
+
+| Param | Type | Description |
+| --- | --- | --- |
+| target | <code>Object</code> | Target to update. |
+| value | <code>Number</code> | New value of property |
+
+### aim.offsetX(target, value)
+Same as **aim.offsetY** for the x axis.
 
 ## Events
 ### onFocus(target)
