@@ -1,37 +1,36 @@
-import fm from '../'
+import aim from '../'
 
-window.fm = fm
+window.aim = aim
 
 const log = obj => JSON.stringify(obj, (key, value) => key !== 'parent' ? value : void 0, 2)
 
-const focusIn = ({ node, x, y, parent }) => {
+const onFocus = ({ node, x, y, parent }) => {
   node.style.background = 'red'
   node.style.fontSize = '10px'
   node.innerHTML = 'x:' + log(x) +
     '<br/> y:' + log(y) +
     '<br/> parent.direction:' + parent.direction
 }
-const focusOut = ({ node }) => { node.style.background = 'lightgrey' }
-
+const onBlur = ({ node }) => { node.style.background = 'lightgrey' }
 const section = document.getElementsByTagName('section')[0]
 const navItems = document.getElementsByTagName('nav')[0].getElementsByTagName('li')
 const menuItems = document.getElementsByTagName('aside')[0].getElementsByTagName('li')
 const sectionItems = section.getElementsByTagName('li')
 const bottomItems = document.getElementsByTagName('nav')[1].getElementsByTagName('li')
 // [y, x, y]
-fm.direction = 'y'
+aim.direction = 'y'
 
-const register = (coordinates, node) => {
+const register = (position, node) => {
   const rect = node.getBoundingClientRect()
   node.innerHTML = 'h:' + rect.height + ' | w:' + rect.width
 
-  fm.register(coordinates, {
+  aim.register({
     node,
     height: rect.height,
     width: rect.width,
-    focusIn,
-    focusOut
-  })
+    onFocus,
+    onBlur
+  }, position)
 }
 
 // register navitems
@@ -54,7 +53,7 @@ for (let i = 0; i < bottomItems.length; i++) {
   register([2, i], bottomItems[i])
 }
 
-const render = () => setTimeout(() => document.body.appendChild(fm.render({
+const render = () => setTimeout(() => document.body.appendChild(aim.render({
   position: 'fixed',
   bottom: 0,
   right: 0,
@@ -67,15 +66,17 @@ window.addEventListener('keydown', e => {
   render()
   e.preventDefault()
 })
+
 section.addEventListener('scroll', () => {
-  fm.offset(fm.get([1, 1]), 'y', -section.scrollTop)
+  aim.update(aim.get([1, 1]), 'y', -section.scrollTop)
 })
+
 render()
 
 console.log('%cchildren:', 'font-weight: bold')
-console.log(log(fm.children))
+console.log(log(aim.children))
 
-window.unregister = (coordinates) => {
-  fm.unregister(coordinates)
+window.unregister = (position) => {
+  aim.unregister(aim.get(position))
   render()
 }

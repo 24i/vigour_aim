@@ -1,50 +1,10 @@
 (function (global, process) { 
 var $3265389822_exports = {}
-var $3265389822_$883917132_createBranch = function (parent, index) {
-  var container = { index: index }
-  if (parent.direction === 'y') {
-    var y = index ? parent.children[index - 1].y.end : parent.y.start
-    container.direction = 'x'
-    container.x = { start: parent.x.start, end: parent.x.end }
-    container.y = { start: y, end: y }
-  } else {
-    var x = index ? parent.children[index - 1].x.end : parent.x.start
-    container.direction = 'y'
-    container.x = { start: x, end: x }
-    container.y = { start: parent.y.start, end: parent.y.end }
-  }
-  container.children = []
-  container.parent = parent
-  parent.children[index] = container
-}
-
-var $3265389822_$883917132_createLeaf = function (parent, index, set) {
-  var x, y
-  if (parent.direction === 'y') {
-    x = set.x === void 0 ? parent.x.start : set.x
-    y = set.y === void 0 ? index ? parent.children[index - 1].y.end : parent.y.start : set.y
-  } else {
-    x = set.x === void 0 ? index ? parent.children[index - 1].x.end : parent.x.start : set.x
-    y = set.y === void 0 ? parent.y.start : set.y
-  }
-  set.index = index
-  set.x = { start: x, mid: x + (set.width || 1) / 2, end: x + (set.width || 1) }
-  set.y = { start: y, mid: y + (set.height || 1) / 2, end: y + (set.height || 1) }
-  set.parent = parent
-  parent.children[index] = set
-}
-
-
-
-var $3265389822_$883917132_$ALL$ = {
-  createBranch: $3265389822_$883917132_createBranch,
-  createLeaf: $3265389822_$883917132_createLeaf
-}
-;var $3265389822_$1874855716_autoFocus = function (fm, set) {
+var $3265389822_$1874855716_autoFocus = function (fm, set) {
   if (!fm.currentFocus && !fm.autoFocusTimer) {
     fm.autoFocusTimer = setTimeout(function () {
       if (!fm.currentFocus) {
-        set.focusIn(set)
+        set.onFocus(set)
         fm.currentFocus = set
       }
     })
@@ -53,8 +13,8 @@ var $3265389822_$883917132_$ALL$ = {
 }
 
 var $3265389822_$1874855716_focusElement = function (fm, element) {
-  if (element.focusIn(element) !== false) {
-    fm.currentFocus.focusOut(fm.currentFocus)
+  if (element.onFocus(element) !== false) {
+    fm.currentFocus.onBlur(fm.currentFocus)
     fm.currentFocus = element
     return element
   }
@@ -116,6 +76,46 @@ var $3265389822_$1874855716_$ALL$ = {
   autoFocus: $3265389822_$1874855716_autoFocus,
   changeFocus: $3265389822_$1874855716_changeFocus,
   focusElement: $3265389822_$1874855716_focusElement
+}
+;var $3265389822_$883917132_createBranch = function (parent, index) {
+  var container = { index: index }
+  if (parent.direction === 'y') {
+    var y = index ? parent.children[index - 1].y.end : parent.y.start
+    container.direction = 'x'
+    container.x = { start: parent.x.start, end: parent.x.end }
+    container.y = { start: y, end: y }
+  } else {
+    var x = index ? parent.children[index - 1].x.end : parent.x.start
+    container.direction = 'y'
+    container.x = { start: x, end: x }
+    container.y = { start: parent.y.start, end: parent.y.end }
+  }
+  container.children = []
+  container.parent = parent
+  parent.children[index] = container
+}
+
+var $3265389822_$883917132_createLeaf = function (parent, index, set) {
+  var x, y
+  if (parent.direction === 'y') {
+    x = set.x === void 0 ? parent.x.start : set.x
+    y = set.y === void 0 ? index ? parent.children[index - 1].y.end : parent.y.start : set.y
+  } else {
+    x = set.x === void 0 ? index ? parent.children[index - 1].x.end : parent.x.start : set.x
+    y = set.y === void 0 ? parent.y.start : set.y
+  }
+  set.index = index
+  set.x = { start: x, mid: x + (set.width || 1) / 2, end: x + (set.width || 1) }
+  set.y = { start: y, mid: y + (set.height || 1) / 2, end: y + (set.height || 1) }
+  set.parent = parent
+  parent.children[index] = set
+}
+
+
+
+var $3265389822_$883917132_$ALL$ = {
+  createBranch: $3265389822_$883917132_createBranch,
+  createLeaf: $3265389822_$883917132_createLeaf
 }
 ;
 
@@ -208,19 +208,19 @@ var $3265389822_$2537101590_updateParentPosition = function (parent, set, axis) 
   }
 }
 
-var $3265389822_$2537101590_setOnPosition = function (coordinates, set) {
-  var parent = $3265389822_$2537101590_fm
-  var index = coordinates[0]
-  for (var i = 0, n = coordinates.length - 1; i < n;) {
+var $3265389822_$2537101590_setOnPosition = function (position, set) {
+  var parent = $3265389822_$2537101590_aim
+  var index = position[0]
+  for (var i = 0, n = position.length - 1; i < n;) {
     if (!parent.children[index]) { $3265389822_$883917132_createBranch(parent, index) }
     parent = parent.children[index]
-    index = coordinates[++i]
+    index = position[++i]
   }
   $3265389822_$883917132_createLeaf(parent, index, set)
   $3265389822_$2537101590_updatePositions(parent, set)
 }
 
-var $3265389822_$2537101590_fm = {
+var $3265389822_$2537101590_aim = {
   currentFocus: false,
   x: {
     start: 0,
@@ -240,76 +240,79 @@ var $3265389822_$2537101590_fm = {
   /*
     register element, this can happen on eg. render
     params:
-    - coordinates (obj) eg [0,0,0]
-    - element (obj) eg { state, x, y, focusIn, focusUpdate, focusOut }
+    - position (obj) eg [0,0,0]
+    - element (obj) eg { state, x, y, onFocus, focusUpdate, onBlur }
     returns element
   */
-  register: function register (coordinates, element) {
-    $3265389822_$686231703_addEventListeners($3265389822_$2537101590_fm)
-    $3265389822_$2537101590_setOnPosition(coordinates, element)
-    $3265389822_$1874855716_autoFocus($3265389822_$2537101590_fm, element)
+  register: function register (element, position) {
+    $3265389822_$686231703_addEventListeners($3265389822_$2537101590_aim)
+    $3265389822_$2537101590_setOnPosition(position, element)
+    $3265389822_$1874855716_autoFocus($3265389822_$2537101590_aim, element)
     return element
   },
   /*
     unregister element, this can happen on eg. remove
     params:
-    - coordinates (obj) eg [0,0,0]
+    - position (obj) eg [0,0,0]
   */
-  unregister: function unregister (coordinates) {
-    var child = $3265389822_$2537101590_fm
-    var index, children
-    for (var i = 0, l = coordinates.length; i < l && child; i++) {
-      index = coordinates[i]
-      children = child.children
-      child = children[index]
-    }
-    if ($3265389822_$2537101590_fm.currentFocus === child) {
+  unregister: function unregister (element) {
+    var index = element.index
+    var children = element.parent.children
+    var length
+
+    if ($3265389822_$2537101590_aim.currentFocus === element) {
       var sibling = children[index ? index - 1 : index + 1]
       if (sibling) {
-        $3265389822_$1874855716_focusElement($3265389822_$2537101590_fm, sibling)
+        $3265389822_$1874855716_focusElement($3265389822_$2537101590_aim, sibling)
       } else {
-        $3265389822_$1874855716_changeFocus($3265389822_$2537101590_fm, 'x', -1) ||
-          $3265389822_$1874855716_changeFocus($3265389822_$2537101590_fm, 'y', -1) ||
-            $3265389822_$1874855716_changeFocus($3265389822_$2537101590_fm, 'x', 1) ||
-              $3265389822_$1874855716_changeFocus($3265389822_$2537101590_fm, 'y', 1)
+        $3265389822_$1874855716_changeFocus($3265389822_$2537101590_aim, 'x', -1) ||
+          $3265389822_$1874855716_changeFocus($3265389822_$2537101590_aim, 'y', -1) ||
+            $3265389822_$1874855716_changeFocus($3265389822_$2537101590_aim, 'x', 1) ||
+              $3265389822_$1874855716_changeFocus($3265389822_$2537101590_aim, 'y', 1)
       }
     }
-    var length
-    while ((length = children.length) === 1 && (child = child.parent)) {
-      children = child.children
+    while ((length = children.length) === 1 && (element = element.parent)) {
+      children = element.children
     }
-    for (var j = index + 1; j < length; j++) {
-      var child$1 = children[j]
-      children[child$1.index = j - 1] = child$1
+    for (var i = index + 1; i < length; i++) {
+      children[children[i].index = i - 1] = children[i]
     }
     children.pop()
   },
   /*
     unregister element, this can happen on eg. remove
     params:
-    - coordinates (obj) eg [0,0,0]
+    - position (obj) eg [0,0,0]
     - set (obj) eg { x }
   */
-  offset: function offset (element, axis, offset$1) {
-    element[axis].offset = offset$1
+  update: function update (element, property, value) {
+    if ('children' in element) {
+      if (property === 'y' || property === 'x') {
+        element[property].offset = value
+      }
+    } else {
+      // @todo!
+      // do all types of repositioning etc!
+      element[property] = value
+    }
   },
-  get: function get (coordinates) {
-    for (var i = 0, l = coordinates.length, child = $3265389822_$2537101590_fm; i < l && child; i++) {
-      child = child.children[coordinates[i]]
+  get: function get (position) {
+    for (var i = 0, l = position.length, child = $3265389822_$2537101590_aim; i < l && child; i++) {
+      child = child.children[position[i]]
     }
     return child
   },
   /*
     focus element
     params:
-    - coordinates (obj) eg [0,0,0]
+    - position (obj) eg [0,0,0]
     OR
     - element (obj)
     returns element if new focus
   */
   focus: function focus (element) {
     if (Array.isArray(element)) {
-      var children = $3265389822_$2537101590_fm.children
+      var children = $3265389822_$2537101590_aim.children
       var target
       for (var i = 0, l = element.length; i < l; i++) {
         target = children[element[i]]
@@ -318,30 +321,30 @@ var $3265389822_$2537101590_fm = {
       }
       element = target
     }
-    return $3265389822_$1874855716_focusElement($3265389822_$2537101590_fm, element)
+    return $3265389822_$1874855716_focusElement($3265389822_$2537101590_aim, element)
   },
   render: function render (style) {
     var view = document.createElement('div')
-    if ($3265389822_$2537101590_fm.view) {
-      $3265389822_$2537101590_fm.view.parentNode.removeChild($3265389822_$2537101590_fm.view)
+    if ($3265389822_$2537101590_aim.view) {
+      $3265389822_$2537101590_aim.view.parentNode.removeChild($3265389822_$2537101590_aim.view)
     }
     for (var field in style) {
       view.style[field] = style[field]
     }
-    $3265389822_$2537101590_render(view, $3265389822_$2537101590_fm, [])
-    return ($3265389822_$2537101590_fm.view = view)
+    $3265389822_$2537101590_render(view, $3265389822_$2537101590_aim, [])
+    return ($3265389822_$2537101590_aim.view = view)
   }
 }
 
-var $3265389822_$2537101590_render = function (root, element, coordinates) {
+var $3265389822_$2537101590_render = function (root, element, position) {
   var div = document.createElement('div')
   var style = div.style
 
   style.position = 'absolute'
-  style.left = element.x.start / $3265389822_$2537101590_fm.x.end * 100 + '%'
-  style.top = element.y.start / $3265389822_$2537101590_fm.y.end * 100 + '%'
-  style.width = (element.x.end - element.x.start) / $3265389822_$2537101590_fm.x.end * 100 + '%'
-  style.height = (element.y.end - element.y.start) / $3265389822_$2537101590_fm.y.end * 100 + '%'
+  style.left = element.x.start / $3265389822_$2537101590_aim.x.end * 100 + '%'
+  style.top = element.y.start / $3265389822_$2537101590_aim.y.end * 100 + '%'
+  style.width = (element.x.end - element.x.start) / $3265389822_$2537101590_aim.x.end * 100 + '%'
+  style.height = (element.y.end - element.y.start) / $3265389822_$2537101590_aim.y.end * 100 + '%'
   style.boxSizing = 'border-box'
   style.border = '1px solid white'
   style.textAlign = 'center'
@@ -350,11 +353,11 @@ var $3265389822_$2537101590_render = function (root, element, coordinates) {
   if ('children' in element) {
     for (var i = 0, l = element.children.length; i < l; i++) {
       var child = element.children[i]
-      root.appendChild($3265389822_$2537101590_render(root, child, coordinates.concat(child.index)))
+      root.appendChild($3265389822_$2537101590_render(root, child, position.concat(child.index)))
     }
   } else {
-    div.innerHTML = JSON.stringify(coordinates)
-    style.backgroundColor = element === $3265389822_$2537101590_fm.currentFocus
+    div.innerHTML = JSON.stringify(position)
+    style.backgroundColor = element === $3265389822_$2537101590_aim.currentFocus
       ? 'rgba(255,0,0,0.5)'
       : 'rgba(0,0,0,0.5)'
   }
@@ -362,17 +365,17 @@ var $3265389822_$2537101590_render = function (root, element, coordinates) {
   return div
 }
 
-var $3265389822_$2537101590 = $3265389822_$2537101590_fm
+var $3265389822_$2537101590 = $3265389822_$2537101590_aim
 
 
 var $3265389822 = $3265389822_$2537101590
 ;
 
-window.fm = $3265389822
+window.aim = $3265389822
 
 var $4271007840_log = function (obj) { return JSON.stringify(obj, function (key, value) { return key !== 'parent' ? value : void 0; }, 2); }
 
-var $4271007840_focusIn = function (ref) {
+var $4271007840_onFocus = function (ref) {
   var node = ref.node;
   var x = ref.x;
   var y = ref.y;
@@ -384,10 +387,9 @@ var $4271007840_focusIn = function (ref) {
     '<br/> y:' + $4271007840_log(y) +
     '<br/> parent.direction:' + parent.direction
 }
-var $4271007840_focusOut = function (ref) {
+var $4271007840_onBlur = function (ref) {
 var node = ref.node;
  node.style.background = 'lightgrey' }
-
 var $4271007840_section = document.getElementsByTagName('section')[0]
 var $4271007840_navItems = document.getElementsByTagName('nav')[0].getElementsByTagName('li')
 var $4271007840_menuItems = document.getElementsByTagName('aside')[0].getElementsByTagName('li')
@@ -396,17 +398,17 @@ var $4271007840_bottomItems = document.getElementsByTagName('nav')[1].getElement
 // [y, x, y]
 $3265389822.direction = 'y'
 
-var $4271007840_register = function (coordinates, node) {
+var $4271007840_register = function (position, node) {
   var rect = node.getBoundingClientRect()
   node.innerHTML = 'h:' + rect.height + ' | w:' + rect.width
 
-  $3265389822.register(coordinates, {
+  $3265389822.register({
     node: node,
     height: rect.height,
     width: rect.width,
-    focusIn: $4271007840_focusIn,
-    focusOut: $4271007840_focusOut
-  })
+    onFocus: $4271007840_onFocus,
+    onBlur: $4271007840_onBlur
+  }, position)
 }
 
 // register navitems
@@ -442,16 +444,18 @@ window.addEventListener('keydown', function (e) {
   $4271007840_render()
   e.preventDefault()
 })
+
 $4271007840_section.addEventListener('scroll', function () {
-  $3265389822.offset($3265389822.get([1, 1]), 'y', -$4271007840_section.scrollTop)
+  $3265389822.update($3265389822.get([1, 1]), 'y', -$4271007840_section.scrollTop)
 })
+
 $4271007840_render()
 
 console.log('%cchildren:', 'font-weight: bold')
 console.log($4271007840_log($3265389822.children))
 
-window.unregister = function (coordinates) {
-  $3265389822.unregister(coordinates)
+window.unregister = function (position) {
+  $3265389822.unregister($3265389822.get(position))
   $4271007840_render()
 }
 ;
