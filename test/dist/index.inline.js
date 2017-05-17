@@ -438,7 +438,10 @@ var $4271007840_render = function () { return setTimeout(function () { return do
   fontSize: '10px'
 })); }); }
 
-window.addEventListener('keydown', $4271007840_render)
+window.addEventListener('keydown', function (e) {
+  $4271007840_render()
+  e.preventDefault()
+})
 $4271007840_section.addEventListener('scroll', function () {
   $3265389822.offset($3265389822.get([1, 1]), 'y', -$4271007840_section.scrollTop)
 })
