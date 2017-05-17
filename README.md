@@ -8,53 +8,53 @@ npm i --save aim
 ## Examples
 ```js
 aim.register({
-  onFocus () {
-    // fires when element is focused
+  onFocus (target) {
+    // fires when target is focused
   },
-  onBlur () {
-    // fires when element is unfocused 
+  onBlur (target) {
+    // fires when target is unfocused 
   },
-  onUpdate () {
+  onUpdate (target) {
     // fires when there has been an update such as scroll, resize 
   }
 }, [0, 0, 1])
 ```
 
 ## Methods
-### aim.register(element, position)
-Registers element on given position.
+### aim.register(target, position)
+Registers target on given position.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| element | <code>Object</code> | Element containing handlers. |
+| target | <code>Object</code> | Target containing handlers. |
 | position | <code>Array</code> | Coordinates for position. |
 
-### aim.unregister(element)
-Unregisters element.
+### aim.unregister(target)
+Unregisters target.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| element | <code>Object</code> | Element to unregister. |
+| target | <code>Object</code> | Target to unregister. |
 
-### aim.update(element, property, value)
-Update properties for given element. Can be used when scrolling sections of the view, animating components or resizing the window.
+### aim.update(target, property, value)
+Update properties for given target. Can be used when scrolling sections of the view, animating components or resizing the window.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| element | <code>Object</code> | Coordinates for position or element. |
+| target | <code>Object</code> | Coordinates for position or target. |
 | property | <code>String</code> | Property to update, eg. <code>x</code> or <code>y</code>. |
 
 ## Events
-### onFocus(element)
-Fires when element is focused.
+### onFocus(target)
+Fires when target is focused.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| element | <code>Object</code> | Registered element. |
+| target | <code>Object</code> | Registered target. |
 
-### onBlur(element)
-Fires when element is unfocused.
+### onBlur(target)
+Fires when target is unfocused.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| element | <code>Object</code> | Registered element. |
+| target | <code>Object</code> | Registered target. |

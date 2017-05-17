@@ -1,26 +1,26 @@
-const autoFocus = (fm, set) => {
-  if (!fm.currentFocus && !fm.autoFocusTimer) {
-    fm.autoFocusTimer = setTimeout(() => {
-      if (!fm.currentFocus) {
+const autoFocus = (aim, set) => {
+  if (!aim.currentFocus && !aim.autoFocusTimer) {
+    aim.autoFocusTimer = setTimeout(() => {
+      if (!aim.currentFocus) {
         set.onFocus(set)
-        fm.currentFocus = set
+        aim.currentFocus = set
       }
     })
-    fm.autoFocusTimer = null
+    aim.autoFocusTimer = null
   }
 }
 
-const focusElement = (fm, element) => {
-  if (element.onFocus(element) !== false) {
-    fm.currentFocus.onBlur(fm.currentFocus)
-    fm.currentFocus = element
-    return element
+const focusElement = (aim, target) => {
+  if (target.onFocus(target) !== false) {
+    aim.currentFocus.onBlur(aim.currentFocus)
+    aim.currentFocus = target
+    return target
   }
 }
 
-const findClosestDescendant = (fm, child) => {
+const findClosestDescendant = (aim, child) => {
   if ('children' in child) {
-    let current = fm.currentFocus
+    let current = aim.currentFocus
     let parent = current
     let x = current.x.mid
     let y = current.y.mid
@@ -49,8 +49,8 @@ const findClosestDescendant = (fm, child) => {
   return child
 }
 
-const changeFocus = (fm, direction, delta) => {
-  var target = fm.currentFocus
+const changeFocus = (aim, direction, delta) => {
+  var target = aim.currentFocus
   var parent = target.parent
   // walk up from currentFocus
   while (parent) {
@@ -58,9 +58,9 @@ const changeFocus = (fm, direction, delta) => {
       let sibling = target
       // if direction is correct walk (delta) sibling
       while ((sibling = parent.children[sibling.index + delta])) {
-        const child = findClosestDescendant(fm, sibling)
+        const child = findClosestDescendant(aim, sibling)
         // if new focus return
-        if (focusElement(fm, child)) return child
+        if (focusElement(aim, child)) return child
       }
     }
     target = parent

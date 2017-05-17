@@ -27,21 +27,21 @@ const keys = {
   }
 }
 
-const addEventListeners = fm => {
-  if (!fm.addedListeners) {
+const addEventListeners = aim => {
+  if (!aim.addedListeners) {
     global.addEventListener('keydown', event => {
       if (event.keyCode in keys) {
-        const focusUpdate = fm.currentFocus.focusUpdate
+        const focusUpdate = aim.currentFocus.focusUpdate
         const handledByElement = focusUpdate
-          ? focusUpdate(fm.currentFocus)
+          ? focusUpdate(aim.currentFocus)
           : false
         if (handledByElement === false) {
           const { delta, direction } = keys[event.keyCode]
-          if (direction) changeFocus(fm, direction, delta)
+          if (direction) changeFocus(aim, direction, delta)
         }
       }
     })
-    fm.addedListeners = true
+    aim.addedListeners = true
   }
 }
 

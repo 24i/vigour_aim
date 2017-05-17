@@ -1,26 +1,26 @@
-const $1874855716_autoFocus = (fm, set) => {
-  if (!fm.currentFocus && !fm.autoFocusTimer) {
-    fm.autoFocusTimer = setTimeout(() => {
-      if (!fm.currentFocus) {
+const $1874855716_autoFocus = (aim, set) => {
+  if (!aim.currentFocus && !aim.autoFocusTimer) {
+    aim.autoFocusTimer = setTimeout(() => {
+      if (!aim.currentFocus) {
         set.onFocus(set)
-        fm.currentFocus = set
+        aim.currentFocus = set
       }
     })
-    fm.autoFocusTimer = null
+    aim.autoFocusTimer = null
   }
 }
 
-const $1874855716_focusElement = (fm, element) => {
-  if (element.onFocus(element) !== false) {
-    fm.currentFocus.onBlur(fm.currentFocus)
-    fm.currentFocus = element
-    return element
+const $1874855716_focusElement = (aim, target) => {
+  if (target.onFocus(target) !== false) {
+    aim.currentFocus.onBlur(aim.currentFocus)
+    aim.currentFocus = target
+    return target
   }
 }
 
-const $1874855716_findClosestDescendant = (fm, child) => {
+const $1874855716_findClosestDescendant = (aim, child) => {
   if ('children' in child) {
-    let current = fm.currentFocus
+    let current = aim.currentFocus
     let parent = current
     let x = current.x.mid
     let y = current.y.mid
@@ -49,8 +49,8 @@ const $1874855716_findClosestDescendant = (fm, child) => {
   return child
 }
 
-const $1874855716_changeFocus = (fm, direction, delta) => {
-  var target = fm.currentFocus
+const $1874855716_changeFocus = (aim, direction, delta) => {
+  var target = aim.currentFocus
   var parent = target.parent
   // walk up from currentFocus
   while (parent) {
@@ -58,9 +58,9 @@ const $1874855716_changeFocus = (fm, direction, delta) => {
       let sibling = target
       // if direction is correct walk (delta) sibling
       while ((sibling = parent.children[sibling.index + delta])) {
-        const child = $1874855716_findClosestDescendant(fm, sibling)
+        const child = $1874855716_findClosestDescendant(aim, sibling)
         // if new focus return
-        if ($1874855716_focusElement(fm, child)) return child
+        if ($1874855716_focusElement(aim, child)) return child
       }
     }
     target = parent
@@ -103,8 +103,8 @@ const $883917132_createLeaf = (parent, index, set) => {
     y = set.y === void 0 ? parent.y.start : set.y
   }
   set.index = index
-  set.x = { start: x, mid: x + (set.width || 1) / 2, end: x + (set.width || 1) }
-  set.y = { start: y, mid: y + (set.height || 1) / 2, end: y + (set.height || 1) }
+  set.x = { start: x, mid: x + (set.w || 1) / 2, end: x + (set.w || 1) }
+  set.y = { start: y, mid: y + (set.h || 1) / 2, end: y + (set.h || 1) }
   set.parent = parent
   parent.children[index] = set
 }
@@ -144,21 +144,21 @@ const $686231703_keys = {
   }
 }
 
-const $686231703_addEventListeners = fm => {
-  if (!fm.addedListeners) {
+const $686231703_addEventListeners = aim => {
+  if (!aim.addedListeners) {
     global.addEventListener('keydown', event => {
       if (event.keyCode in $686231703_keys) {
-        const focusUpdate = fm.currentFocus.focusUpdate
+        const focusUpdate = aim.currentFocus.focusUpdate
         const handledByElement = focusUpdate
-          ? focusUpdate(fm.currentFocus)
+          ? focusUpdate(aim.currentFocus)
           : false
         if (handledByElement === false) {
           const { delta, direction } = $686231703_keys[event.keyCode]
-          if (direction) $1874855716_changeFocus(fm, direction, delta)
+          if (direction) $1874855716_changeFocus(aim, direction, delta)
         }
       }
     })
-    fm.addedListeners = true
+    aim.addedListeners = true
   }
 }
 
@@ -234,29 +234,29 @@ const $2537101590_aim = {
   */
   direction: 'y',
   /*
-    register element, this can happen on eg. render
+    register target, this can happen on eg. render
     params:
     - position (obj) eg [0,0,0]
-    - element (obj) eg { state, x, y, onFocus, focusUpdate, onBlur }
-    returns element
+    - target (obj) eg { state, x, y, onFocus, focusUpdate, onBlur }
+    returns target
   */
-  register (element, position) {
+  register (target, position) {
     $686231703_addEventListeners($2537101590_aim)
-    $2537101590_setOnPosition(position, element)
-    $1874855716_autoFocus($2537101590_aim, element)
-    return element
+    $2537101590_setOnPosition(position, target)
+    $1874855716_autoFocus($2537101590_aim, target)
+    return target
   },
   /*
-    unregister element, this can happen on eg. remove
+    unregister target, this can happen on eg. remove
     params:
     - position (obj) eg [0,0,0]
   */
-  unregister (element) {
-    const index = element.index
-    var children = element.parent.children
+  unregister (target) {
+    const index = target.index
+    var children = target.parent.children
     var length
 
-    if ($2537101590_aim.currentFocus === element) {
+    if ($2537101590_aim.currentFocus === target) {
       const sibling = children[index ? index - 1 : index + 1]
       if (sibling) {
         $1874855716_focusElement($2537101590_aim, sibling)
@@ -267,8 +267,8 @@ const $2537101590_aim = {
               $1874855716_changeFocus($2537101590_aim, 'y', 1)
       }
     }
-    while ((length = children.length) === 1 && (element = element.parent)) {
-      children = element.children
+    while ((length = children.length) === 1 && (target = target.parent)) {
+      children = target.children
     }
     for (var i = index + 1; i < length; i++) {
       children[children[i].index = i - 1] = children[i]
@@ -276,20 +276,65 @@ const $2537101590_aim = {
     children.pop()
   },
   /*
-    unregister element, this can happen on eg. remove
+    unregister target, this can happen on eg. remove
     params:
     - position (obj) eg [0,0,0]
     - set (obj) eg { x }
   */
-  update (element, property, value) {
-    if ('children' in element) {
+  update (target, property, value, throttleTime) {
+    if ('children' in target) {
       if (property === 'y' || property === 'x') {
-        element[property].offset = value
+        target[property].offset = value
       }
     } else {
+      console.log('mission man:', property, value)
       // @todo!
       // do all types of repositioning etc!
-      element[property] = value
+      if (property === 'h') {
+        target.y.size = value
+      } else if (property === 'w') {
+        target.x.size = value
+      } else if (property === 'y') {
+        target.y.start = value
+      } else if (property === 'x') {
+        target.x.start = value
+      }
+      // do repositioning!
+
+      if ($2537101590_aim.updateTimer) {
+        clearTimeout($2537101590_aim.updateTimer)
+      }
+
+      const update = parent => {
+        var children = parent.children
+        for (var i = 0, l = children.length; i < l; i++) {
+          const target = children[i]
+          if ('children' in target) {
+            update(target)
+          } else {
+            if (parent.direction === 'y') {
+              const y = i ? children[i - 1].y.end : parent.y.start
+              target.y = {
+                start: y,
+                mid: y + (target.y.size || 1) / 2,
+                end: y + (target.y.size || 1)
+              }
+            } else {
+              const x = i ? children[i - 1].x.end : parent.x.start
+              target.x = {
+                start: x,
+                mid: x + (target.x.size || 1) / 2,
+                end: x + (target.x.size || 1)
+              }
+            }
+          }
+        }
+      }
+
+      $2537101590_aim.updateTimer = setTimeout(() => {
+        update($2537101590_aim)
+        $2537101590_aim.updateTimer = null
+      }, throttleTime)
     }
   },
   get (position) {
@@ -299,25 +344,12 @@ const $2537101590_aim = {
     return child
   },
   /*
-    focus element
-    params:
-    - position (obj) eg [0,0,0]
-    OR
-    - element (obj)
-    returns element if new focus
+    focus target
+    - target (obj)
+    returns target if new focus
   */
-  focus (element) {
-    if (Array.isArray(element)) {
-      let children = $2537101590_aim.children
-      let target
-      for (let i = 0, l = element.length; i < l; i++) {
-        target = children[element[i]]
-        if (!target) return
-        children = target.children
-      }
-      element = target
-    }
-    return $1874855716_focusElement($2537101590_aim, element)
+  focus (target) {
+    return $1874855716_focusElement($2537101590_aim, target)
   },
   render (style) {
     const view = document.createElement('div')
@@ -332,28 +364,28 @@ const $2537101590_aim = {
   }
 }
 
-const $2537101590_render = (root, element, position) => {
+const $2537101590_render = (root, target, position) => {
   const div = document.createElement('div')
   const style = div.style
 
   style.position = 'absolute'
-  style.left = element.x.start / $2537101590_aim.x.end * 100 + '%'
-  style.top = element.y.start / $2537101590_aim.y.end * 100 + '%'
-  style.width = (element.x.end - element.x.start) / $2537101590_aim.x.end * 100 + '%'
-  style.height = (element.y.end - element.y.start) / $2537101590_aim.y.end * 100 + '%'
+  style.left = target.x.start / $2537101590_aim.x.end * 100 + '%'
+  style.top = target.y.start / $2537101590_aim.y.end * 100 + '%'
+  style.width = (target.x.end - target.x.start) / $2537101590_aim.x.end * 100 + '%'
+  style.height = (target.y.end - target.y.start) / $2537101590_aim.y.end * 100 + '%'
   style.boxSizing = 'border-box'
   style.border = '1px solid white'
   style.textAlign = 'center'
   style.color = 'white'
 
-  if ('children' in element) {
-    for (let i = 0, l = element.children.length; i < l; i++) {
-      const child = element.children[i]
+  if ('children' in target) {
+    for (let i = 0, l = target.children.length; i < l; i++) {
+      const child = target.children[i]
       root.appendChild($2537101590_render(root, child, position.concat(child.index)))
     }
   } else {
     div.innerHTML = JSON.stringify(position)
-    style.backgroundColor = element === $2537101590_aim.currentFocus
+    style.backgroundColor = target === $2537101590_aim.currentFocus
       ? 'rgba(255,0,0,0.5)'
       : 'rgba(0,0,0,0.5)'
   }
