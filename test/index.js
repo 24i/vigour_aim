@@ -26,8 +26,8 @@ const register = (position, node) => {
 
   aim.register({
     node,
-    height: rect.height,
-    width: rect.width,
+    h: rect.height,
+    w: rect.width,
     onFocus,
     onBlur
   }, position)
@@ -56,7 +56,7 @@ for (let i = 0; i < bottomItems.length; i++) {
 const render = () => setTimeout(() => document.body.appendChild(aim.render({
   position: 'fixed',
   bottom: 0,
-  right: 0,
+  left: 0,
   width: '200px',
   height: '200px',
   fontSize: '10px'
@@ -69,6 +69,17 @@ window.addEventListener('keydown', e => {
 
 section.addEventListener('scroll', () => {
   aim.update(aim.get([1, 1]), 'y', -section.scrollTop)
+})
+
+window.addEventListener('resize', e => {
+  for (let i = 0; i < navItems.length; i++) {
+    const node = navItems[i]
+    const rect = node.getBoundingClientRect()
+    node.innerHTML = 'h:' + rect.height + ' | w:' + rect.width
+    const target = aim.get([0, i])
+    aim.update(target, 'w', rect.width)
+  }
+  render()
 })
 
 render()

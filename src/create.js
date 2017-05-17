@@ -26,8 +26,8 @@ const createLeaf = (parent, index, set) => {
     y = set.y === void 0 ? parent.y.start : set.y
   }
   set.index = index
-  set.x = { start: x, mid: x + (set.width || 1) / 2, end: x + (set.width || 1) }
-  set.y = { start: y, mid: y + (set.height || 1) / 2, end: y + (set.height || 1) }
+  set.x = { start: x, mid: x + (set.w || 1) / 2, end: x + (set.w || 1) }
+  set.y = { start: y, mid: y + (set.h || 1) / 2, end: y + (set.h || 1) }
   set.parent = parent
   parent.children[index] = set
 }
