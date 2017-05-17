@@ -2,7 +2,7 @@ const autoFocus = (fm, set) => {
   if (!fm.currentFocus && !fm.autoFocusTimer) {
     fm.autoFocusTimer = setTimeout(() => {
       if (!fm.currentFocus) {
-        set.focusIn(set)
+        set.onFocus(set)
         fm.currentFocus = set
       }
     })
@@ -11,8 +11,8 @@ const autoFocus = (fm, set) => {
 }
 
 const focusElement = (fm, element) => {
-  if (element.focusIn(element) !== false) {
-    fm.currentFocus.focusOut(fm.currentFocus)
+  if (element.onFocus(element) !== false) {
+    fm.currentFocus.onBlur(fm.currentFocus)
     fm.currentFocus = element
     return element
   }

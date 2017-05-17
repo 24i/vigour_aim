@@ -35,19 +35,19 @@ const updateParentPosition = (parent, set, axis) => {
   }
 }
 
-const setOnPosition = (coordinates, set) => {
-  var parent = fm
-  var index = coordinates[0]
-  for (let i = 0, n = coordinates.length - 1; i < n;) {
+const setOnPosition = (position, set) => {
+  var parent = aim
+  var index = position[0]
+  for (let i = 0, n = position.length - 1; i < n;) {
     if (!parent.children[index]) createBranch(parent, index)
     parent = parent.children[index]
-    index = coordinates[++i]
+    index = position[++i]
   }
   createLeaf(parent, index, set)
   updatePositions(parent, set)
 }
 
-const fm = {
+const aim = {
   currentFocus: false,
   x: {
     start: 0,
@@ -67,76 +67,79 @@ const fm = {
   /*
     register element, this can happen on eg. render
     params:
-    - coordinates (obj) eg [0,0,0]
-    - element (obj) eg { state, x, y, focusIn, focusUpdate, focusOut }
+    - position (obj) eg [0,0,0]
+    - element (obj) eg { state, x, y, onFocus, focusUpdate, onBlur }
     returns element
   */
-  register (coordinates, element) {
-    addEventListeners(fm)
-    setOnPosition(coordinates, element)
-    autoFocus(fm, element)
+  register (element, position) {
+    addEventListeners(aim)
+    setOnPosition(position, element)
+    autoFocus(aim, element)
     return element
   },
   /*
     unregister element, this can happen on eg. remove
     params:
-    - coordinates (obj) eg [0,0,0]
+    - position (obj) eg [0,0,0]
   */
-  unregister (coordinates) {
-    var child = fm
-    var index, children
-    for (var i = 0, l = coordinates.length; i < l && child; i++) {
-      index = coordinates[i]
-      children = child.children
-      child = children[index]
-    }
-    if (fm.currentFocus === child) {
+  unregister (element) {
+    const index = element.index
+    var children = element.parent.children
+    var length
+
+    if (aim.currentFocus === element) {
       const sibling = children[index ? index - 1 : index + 1]
       if (sibling) {
-        focusElement(fm, sibling)
+        focusElement(aim, sibling)
       } else {
-        changeFocus(fm, 'x', -1) ||
-          changeFocus(fm, 'y', -1) ||
-            changeFocus(fm, 'x', 1) ||
-              changeFocus(fm, 'y', 1)
+        changeFocus(aim, 'x', -1) ||
+          changeFocus(aim, 'y', -1) ||
+            changeFocus(aim, 'x', 1) ||
+              changeFocus(aim, 'y', 1)
       }
     }
-    let length
-    while ((length = children.length) === 1 && (child = child.parent)) {
-      children = child.children
+    while ((length = children.length) === 1 && (element = element.parent)) {
+      children = element.children
     }
-    for (let j = index + 1; j < length; j++) {
-      const child = children[j]
-      children[child.index = j - 1] = child
+    for (var i = index + 1; i < length; i++) {
+      children[children[i].index = i - 1] = children[i]
     }
     children.pop()
   },
   /*
     unregister element, this can happen on eg. remove
     params:
-    - coordinates (obj) eg [0,0,0]
+    - position (obj) eg [0,0,0]
     - set (obj) eg { x }
   */
-  offset (element, axis, offset) {
-    element[axis].offset = offset
+  update (element, property, value) {
+    if ('children' in element) {
+      if (property === 'y' || property === 'x') {
+        element[property].offset = value
+      }
+    } else {
+      // @todo!
+      // do all types of repositioning etc!
+      element[property] = value
+    }
   },
-  get (coordinates) {
-    for (var i = 0, l = coordinates.length, child = fm; i < l && child; i++) {
-      child = child.children[coordinates[i]]
+  get (position) {
+    for (var i = 0, l = position.length, child = aim; i < l && child; i++) {
+      child = child.children[position[i]]
     }
     return child
   },
   /*
     focus element
     params:
-    - coordinates (obj) eg [0,0,0]
+    - position (obj) eg [0,0,0]
     OR
     - element (obj)
     returns element if new focus
   */
   focus (element) {
     if (Array.isArray(element)) {
-      let children = fm.children
+      let children = aim.children
       let target
       for (let i = 0, l = element.length; i < l; i++) {
         target = children[element[i]]
@@ -145,30 +148,30 @@ const fm = {
       }
       element = target
     }
-    return focusElement(fm, element)
+    return focusElement(aim, element)
   },
   render (style) {
     const view = document.createElement('div')
-    if (fm.view) {
-      fm.view.parentNode.removeChild(fm.view)
+    if (aim.view) {
+      aim.view.parentNode.removeChild(aim.view)
     }
     for (var field in style) {
       view.style[field] = style[field]
     }
-    render(view, fm, [])
-    return (fm.view = view)
+    render(view, aim, [])
+    return (aim.view = view)
   }
 }
 
-const render = (root, element, coordinates) => {
+const render = (root, element, position) => {
   const div = document.createElement('div')
   const style = div.style
 
   style.position = 'absolute'
-  style.left = element.x.start / fm.x.end * 100 + '%'
-  style.top = element.y.start / fm.y.end * 100 + '%'
-  style.width = (element.x.end - element.x.start) / fm.x.end * 100 + '%'
-  style.height = (element.y.end - element.y.start) / fm.y.end * 100 + '%'
+  style.left = element.x.start / aim.x.end * 100 + '%'
+  style.top = element.y.start / aim.y.end * 100 + '%'
+  style.width = (element.x.end - element.x.start) / aim.x.end * 100 + '%'
+  style.height = (element.y.end - element.y.start) / aim.y.end * 100 + '%'
   style.boxSizing = 'border-box'
   style.border = '1px solid white'
   style.textAlign = 'center'
@@ -177,11 +180,11 @@ const render = (root, element, coordinates) => {
   if ('children' in element) {
     for (let i = 0, l = element.children.length; i < l; i++) {
       const child = element.children[i]
-      root.appendChild(render(root, child, coordinates.concat(child.index)))
+      root.appendChild(render(root, child, position.concat(child.index)))
     }
   } else {
-    div.innerHTML = JSON.stringify(coordinates)
-    style.backgroundColor = element === fm.currentFocus
+    div.innerHTML = JSON.stringify(position)
+    style.backgroundColor = element === aim.currentFocus
       ? 'rgba(255,0,0,0.5)'
       : 'rgba(0,0,0,0.5)'
   }
@@ -189,4 +192,4 @@ const render = (root, element, coordinates) => {
   return div
 }
 
-export default fm
+export default aim
