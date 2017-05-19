@@ -1,4 +1,4 @@
-const renderChild = (root, target, position) => {
+const renderChild = (aim, root, target, position) => {
   const div = document.createElement('div')
   const style = div.style
 
@@ -15,7 +15,7 @@ const renderChild = (root, target, position) => {
   if ('children' in target) {
     for (let i = 0, l = target.children.length; i < l; i++) {
       const child = target.children[i]
-      root.appendChild(renderChild(root, child, position.concat(child.index)))
+      root.appendChild(renderChild(aim, root, child, position.concat(child.index)))
     }
   } else {
     div.innerHTML = JSON.stringify(position)
@@ -35,7 +35,7 @@ export default {
     for (var field in style) {
       view.style[field] = style[field]
     }
-    renderChild(view, aim, [])
+    renderChild(aim, view, aim, [])
     return (aim.view = view)
   }
 }

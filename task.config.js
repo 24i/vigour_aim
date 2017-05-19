@@ -4,18 +4,28 @@ exports.inject = [
   require('task/packages/task-livereload')
 ]
 
+const test = process.argv[2] || 'basic'
+
+console.log('test!', test)
+
 exports.tasks = {
   'build-test': {
     type: 'build-js',
     options: {
-      entry: 'test/index.js',
+      entry: `test/${test}.js`,
       dest: 'test/dist/index.js',
       raw: true,
       targets: [ 'inline' ]
     },
     done: {
       on (val, stamp, done) {
-        done.root().set({ tasks: { reload: { done: true } } }, stamp)
+        done.root().set({
+          tasks: {
+            reload: {
+              done: true
+            }
+          }
+        }, stamp)
       }
     }
   },

@@ -50,8 +50,7 @@ const setOnPosition = (position, set) => {
   var parent = aim
   var index = position[0]
   for (let i = 0, n = position.length - 1; i < n;) {
-    if (!parent.children[index]) createBranch(parent, index)
-    parent = parent.children[index]
+    parent = createBranch(parent, index)
     index = position[++i]
   }
   createLeaf(parent, index, set)

@@ -1,5 +1,5 @@
 import aim from '../'
-import util from '../src/util'
+import util from '../dist/util'
 
 window.aim = aim
 

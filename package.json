@@ -4,14 +4,19 @@
   "scripts": {
     "dev": "task",
     "watch": "npm run build -- -w",
-    "build": "builder-boy src/index.js dist/index.js -t node -r"
+    "build": "builder-boy src/index.js dist/index.js -t node -r && npm run build-util",
+    "build-util": "builder-boy src/util.js dist/util.js -t node -r"
   },
-  "files": [ "dist" ],
+  "files": [
+    "dist"
+  ],
   "devDependencies": {
+    "brisky-render": "^2.2.67",
     "builder-boy": "latest",
-    "task": "latest",
+    "hub.js": "^0.2.9",
     "nodemon": "^1.11.0",
     "pre-commit": "^1.1.3",
-    "standard": "^8.1.0"
+    "standard": "^8.1.0",
+    "task": "latest"
   }
 }

@@ -1,19 +1,23 @@
 const createBranch = (parent, index) => {
-  const b = { index, children: [], parent }
-  if (parent.direction === 'y') {
-    b.direction = 'x'
-    b.x = parent.x
-    b.y = index ? parent.children[index - 1].yEnd : parent.y
-    b.xEnd = parent.xEnd
-    b.yEnd = b.y
+  if (!(index in parent.children)) {
+    const child = { index, children: [], parent }
+    if (parent.direction === 'y') {
+      child.direction = 'x'
+      child.x = parent.x
+      child.y = index ? createBranch(parent, index - 1).yEnd : parent.y
+      child.xEnd = parent.xEnd
+      child.yEnd = child.y
+    } else {
+      child.direction = 'y'
+      child.y = parent.y
+      child.x = index ? createBranch(parent, index - 1).xEnd : parent.x
+      child.yEnd = parent.yEnd
+      child.xEnd = child.x
+    }
+    return (parent.children[index] = child)
   } else {
-    b.direction = 'y'
-    b.y = parent.y
-    b.x = index ? parent.children[index - 1].xEnd : parent.x
-    b.yEnd = parent.yEnd
-    b.xEnd = b.x
+    return parent.children[index]
   }
-  parent.children[index] = b
 }
 
 const createLeaf = (parent, index, set) => {
