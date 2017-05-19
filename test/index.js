@@ -1,35 +1,49 @@
 import aim from '../'
+import util from '../src/util'
 
 window.aim = aim
 
 const log = obj => JSON.stringify(obj, (key, value) => key !== 'parent' ? value : void 0, 2)
 
-const onFocus = ({ node, x, y, parent }) => {
+const onFocus = ({ index, node, x, y, parent }) => {
   node.style.background = 'red'
   node.style.fontSize = '10px'
-  node.innerHTML = 'x:' + log(x) +
+  if (!node._info) {
+    node._info = document.createElement('div')
+    node.appendChild(node._info)
+  }
+  node._info.innerHTML = 'x:' + log(x) +
     '<br/> y:' + log(y) +
     '<br/> parent.direction:' + parent.direction
 }
-const onBlur = ({ node }) => { node.style.background = 'lightgrey' }
+const onBlur = ({ node }) => {
+  node.style.background = 'lightgrey'
+}
+const onEnter = ({ node }) => {
+  node.style.background = 'blue'
+}
+
 const section = document.getElementsByTagName('section')[0]
 const navItems = document.getElementsByTagName('nav')[0].getElementsByTagName('li')
 const menuItems = document.getElementsByTagName('aside')[0].getElementsByTagName('li')
 const sectionItems = section.getElementsByTagName('li')
 const bottomItems = document.getElementsByTagName('nav')[1].getElementsByTagName('li')
-// [y, x, y]
-aim.direction = 'y'
 
 const register = (position, node) => {
   const rect = node.getBoundingClientRect()
-  node.innerHTML = 'h:' + rect.height + ' | w:' + rect.width
+  if (!node._hw) {
+    node._hw = document.createElement('div')
+    node.appendChild(node._hw)
+  }
+  node._hw.innerHTML = 'h:' + rect.height + ' | w:' + rect.width
 
   aim.register({
     node,
     h: rect.height,
     w: rect.width,
     onFocus,
-    onBlur
+    onBlur,
+    onEnter
   }, position)
 }
 
@@ -53,7 +67,7 @@ for (let i = 0; i < bottomItems.length; i++) {
   register([2, i], bottomItems[i])
 }
 
-const render = () => setTimeout(() => document.body.appendChild(aim.render({
+const render = () => setTimeout(() => document.body.appendChild(util.render(aim, {
   position: 'fixed',
   bottom: 0,
   left: 0,
@@ -63,16 +77,18 @@ const render = () => setTimeout(() => document.body.appendChild(aim.render({
 })))
 
 window.addEventListener('keydown', e => {
+  aim.handleKeyEvent(e)
   render()
-  e.preventDefault()
 })
 
 const target = aim.get([1, 1])
+
 section.addEventListener('scroll', () => {
-  var n = section.scrollTop / (section.scrollHeight - section.offsetHeight)
+  const { scrollTop, offsetHeight } = section
+  var n = scrollTop / (section.scrollHeight - offsetHeight)
   n = ~~(n * target.children.length - 0.5)
   aim.focus(target.children[n])
-  aim.offsetY(target, -section.scrollTop)
+  aim.offsetY(target, -scrollTop, offsetHeight)
   render()
 })
 

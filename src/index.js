@@ -1,6 +1,5 @@
 import { autoFocus, changeFocus, focusElement } from './focus'
 import { createBranch, createLeaf } from './create'
-import { addEventListeners } from './events'
 
 const updateX = (parent, set) => {
   if (parent.xEnd < set.xEnd) {
@@ -34,7 +33,7 @@ const updateY = (parent, set) => {
   }
 }
 
-const updatePositions = (parent, set) => {
+const updateParentPositions = (parent, set) => {
   while (parent) {
     const changedX = updateX(parent, set)
     const changedY = updateY(parent, set)
@@ -56,25 +55,25 @@ const setOnPosition = (position, set) => {
     index = position[++i]
   }
   createLeaf(parent, index, set)
-  updatePositions(parent, set)
+  updateParentPositions(parent, set)
 }
 
-const reset = parent => {
+const resetParentPositions = parent => {
   if ('children' in parent) {
     parent.xEnd = 0
     parent.yEnd = 0
     for (var i = parent.children.length - 1; i >= 0; i--) {
-      reset(parent.children[i])
+      resetParentPositions(parent.children[i])
     }
   }
 }
 
-const update = parent => {
+const updatePositions = parent => {
   var children = parent.children
   for (var i = 0, max = children.length - 1; i <= max; i++) {
     const target = children[i]
     if ('children' in target) {
-      update(target)
+      updatePositions(target)
     } else {
       if (parent.direction === 'y') {
         target.y = i ? children[i - 1].yEnd : parent.y
@@ -86,10 +85,44 @@ const update = parent => {
         target.xEnd = target.x + (target.w || 1)
       }
       if (max === i) {
-        updatePositions(parent, target)
+        updateParentPositions(parent, target)
       }
     }
   }
+}
+
+const events = {
+  left: {
+    name: 'onLeft',
+    direction: 'x',
+    delta: -1
+  },
+  right: {
+    name: 'onRight',
+    direction: 'x',
+    delta: 1
+  },
+  up: {
+    name: 'onUp',
+    direction: 'y',
+    delta: -1
+  },
+  down: {
+    name: 'onDown',
+    direction: 'y',
+    delta: 1
+  },
+  enter: {
+    name: 'onEnter'
+  }
+}
+
+const keys = {
+  13: events.enter,
+  37: events.left,
+  38: events.up,
+  39: events.right,
+  40: events.down
 }
 
 const aim = {
@@ -105,6 +138,25 @@ const aim = {
     starting direction
   */
   direction: 'y',
+
+  up: () => changeFocus(aim, events.up.direction, events.up.delta),
+  down: () => changeFocus(aim, events.down.direction, events.down.delta),
+  left: () => changeFocus(aim, events.left.direction, events.left.delta),
+  right: () => changeFocus(aim, events.right.direction, events.right.delta),
+
+  handleKeyEvent (e) {
+    if (e.keyCode in keys) {
+      const event = keys[e.keyCode]
+      const handled = event.name in aim.currentFocus &&
+        aim.currentFocus[event.name](aim.currentFocus)
+      if (handled === false && 'direction' in event) {
+        if (changeFocus(aim, event.direction, event.delta)) {
+          e.preventDefault()
+        }
+      }
+    }
+  },
+
   /*
     register target, this can happen on eg. render
     params:
@@ -113,7 +165,6 @@ const aim = {
     returns target
   */
   register (target, position) {
-    addEventListeners(aim)
     setOnPosition(position, target)
     autoFocus(aim, target)
     return target
@@ -161,8 +212,8 @@ const aim = {
       }
 
       aim.updateTimer = setTimeout(() => {
-        reset(aim)
-        update(aim)
+        resetParentPositions(aim)
+        updatePositions(aim)
         aim.updateTimer = null
       }, throttleTime)
     }
@@ -173,55 +224,17 @@ const aim = {
     }
     return child
   },
-  offsetX (target, value) {
-    target.xOffset = value
+  offsetX (target, x, w) {
+    target.xOffset = x
+    if (w !== void 0) target.wOffset = w
   },
-  offsetY (target, value, size) {
-    target.yOffset = value
+  offsetY (target, y, h) {
+    target.yOffset = y
+    if (h !== void 0) target.hOffset = h
   },
   focus (target) {
     if (target !== aim.currentFocus) return focusElement(aim, target)
-  },
-  render (style) {
-    const view = document.createElement('div')
-    if (aim.view) {
-      aim.view.parentNode.removeChild(aim.view)
-    }
-    for (var field in style) {
-      view.style[field] = style[field]
-    }
-    render(view, aim, [])
-    return (aim.view = view)
   }
-}
-
-const render = (root, target, position) => {
-  const div = document.createElement('div')
-  const style = div.style
-
-  style.position = 'absolute'
-  style.left = target.x / aim.xEnd * 100 + '%'
-  style.top = target.y / aim.yEnd * 100 + '%'
-  style.width = (target.xEnd - target.x) / aim.xEnd * 100 + '%'
-  style.height = (target.yEnd - target.y) / aim.yEnd * 100 + '%'
-  style.boxSizing = 'border-box'
-  style.border = '1px solid white'
-  style.textAlign = 'center'
-  style.color = 'white'
-
-  if ('children' in target) {
-    for (let i = 0, l = target.children.length; i < l; i++) {
-      const child = target.children[i]
-      root.appendChild(render(root, child, position.concat(child.index)))
-    }
-  } else {
-    div.innerHTML = JSON.stringify(position)
-    style.backgroundColor = target === aim.currentFocus
-      ? 'rgba(255,0,0,0.5)'
-      : 'rgba(0,0,0,0.5)'
-  }
-
-  return div
 }
 
 export default aim

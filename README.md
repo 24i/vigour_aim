@@ -5,17 +5,28 @@ Dependency free **focus manager** with built-in universal key navigation.
 npm i --save aim
 ```
 
+## What?
+Register your focusable targets with Aim and Aim will map these into a virtual *table-esque* view.
+
+Aim will now listen for key events, delegate these to the currently focused target and execute default cursor navigation if not prevented by target handlers.
+
 ## Examples
 ```js
 aim.register({
   onFocus (target) {
     // fires when target is focused
+    // return false to prevent focus
   },
   onBlur (target) {
     // fires when target is unfocused 
+
   },
-  onUpdate (target) {
-    // fires when there has been an update such as scroll, resize 
+  onRight (target) {
+    // fires when right is pressed
+    // return false to prevent default behaviour (ie. moving cursor to the right)
+  },
+  onEnter (target) {
+    // fires when enter is pressed
   }
 }, [0, 0, 1])
 ```
@@ -56,6 +67,32 @@ Sets an offsetY value to (holder) target, without updating all individual child 
 ### aim.offsetX(target, value)
 Same as **aim.offsetY()** for the x axis.
 
+### aim.get(position)
+Get target by position.
+
+| Param | Type | Description |
+| --- | --- | --- |
+| position | <code>Array</code> | The coordinates to target (eg. [0, 0, 1]). |
+
+### aim.left()
+Move focus to the left.
+
+### aim.up()
+Move focus to up.
+
+### aim.right()
+Move focus to the right.
+
+### aim.down()
+Move focus to down.
+
+### aim.handleKeyEvent(event)
+Delegate key event to Aim.
+
+| Param | Type | Description |
+| --- | --- | --- |
+| event | <code>Object</code> | DOM KeyEvent. |
+
 ## Events
 ### onFocus(target)
 Fires when target is focused.
@@ -65,7 +102,14 @@ Fires when target is focused.
 | target | <code>Object</code> | Registered target. |
 
 ### onBlur(target)
-Fires when target is unfocused.
+Fires on target when removing focus.
+
+| Param | Type | Description |
+| --- | --- | --- |
+| target | <code>Object</code> | Registered target. |
+
+### onEnter(target)
+Fires on focused target when user presses "enter".
 
 | Param | Type | Description |
 | --- | --- | --- |

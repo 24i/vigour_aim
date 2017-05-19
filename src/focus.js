@@ -26,20 +26,43 @@ const findClosestDescendant = (aim, child) => {
     let y = current.yMid
     let xOffset = 0
     let yOffset = 0
+    let top, left, right, bottom
     while ((parent = parent.parent)) {
       if ('xOffset' in parent) x += parent.xOffset
       if ('yOffset' in parent) y += parent.yOffset
     }
     let children
     while ((children = child.children)) {
-      if ('xOffset' in child) xOffset += child.xOffset
-      if ('yOffset' in child) yOffset += child.yOffset
+      if ('xOffset' in child) {
+        xOffset += child.xOffset
+      }
+      if ('yOffset' in child) {
+        yOffset += child.yOffset
+      }
+      if ('hOffset' in child) {
+        top = !top || child.y > top ? child.y : top
+        bottom = top + child.hOffset
+      }
+      if ('hOffset' in child) {
+        left = !left || child.y > left ? child.y : left
+        right = left + child.hOffset
+      }
       for (let i = 0, l = children.length, diff; i < l; i++) {
         const next = children[i]
         const a = x - next.xMid - xOffset
         const b = y - next.yMid - yOffset
         const c = Math.sqrt(a * a + b * b)
         if (diff === void 0 || c < diff) {
+          if (top || bottom) {
+            if (next.y + yOffset >= bottom || next.yEnd + yOffset <= top) {
+              continue
+            }
+          }
+          if (left || right) {
+            if (next.x + xOffset >= right || next.xEnd + xOffset <= left) {
+              continue
+            }
+          }
           child = next
           diff = c
         }
