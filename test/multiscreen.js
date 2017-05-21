@@ -1,6 +1,7 @@
 import aim from '../'
 import util from '../dist/util'
 import { render } from 'brisky-render'
+import bs from 'stamp'
 import h from 'hub.js'
 
 // clear html => we use brisky now
@@ -8,7 +9,7 @@ for (var i = document.body.children.length - 1; i >= 0; i--) {
   document.body.removeChild(document.body.children[i])
 }
 
-const state = h({
+const hub = h({
   currentPage: [ '@', 'root', 'page', 'discover' ],
   menu: [
     { title: 'menu a' },
@@ -35,28 +36,56 @@ const state = h({
   }
 })
 
+const listenForFocus = columnIndex => ({
+  focusListener: {
+    type: 'property',
+    $: 'focused',
+    render: {
+      state: (t, s) => {
+        console.log('fire:', s.compute(), s.path())
+        if (s.compute()) {
+          console.log('?????', [0, columnIndex, s._p.key | 0])
+          const target = aim.get([0, columnIndex, s._p.key | 0])
+          if (target) aim.focus(target)
+          renderView()
+        }
+      }
+    }
+  }
+})
+
+const registerTarget = (state, target, position) => {
+  target.onFocus = (target, aim) => {
+    const stamp = bs.create()
+    if (aim.currentFocus) {
+      aim.currentFocus.state.get('focused').set(false, stamp)
+    }
+    state.get('focused').set(true, stamp)
+    bs.close()
+    // state
+  }
+  target.onBlur = () => {
+    // state.get('focused').set(false)
+  }
+  target.state = state
+  aim.register(target, position)
+  if (state.get('focused', false).compute()) {
+    aim.focus(target)
+  }
+}
+
 const Page = props => {
   return <div>{
-    props.currentPage.map(p => <div style={{
+    props.page.discover.map(p => <div style={{
       width: 'calc(100vw - 300px)',
       height: '200px',
       lineHeight: '200px',
       color: p.focused.compute() ? 'red' : 'black',
       borderBottom: '1px solid lightgrey'
     }} onRender={({ state }) => {
-      aim.register({
-        h: 200,
-        onFocus () { state.set({ focused: true }) },
-        onBlur () { state.set({ focused: false }) }
-      }, [0, 1, state.key | 0])
-    }}>{ p.title.compute() }</div>)
+      registerTarget(state, { h: 200, w: 300 }, [0, 1, state.key | 0])
+    }} inject={listenForFocus(1)}>{ p.title.compute() }</div>)
   }</div>
-}
-
-const Pages = props => {
-  if (props.currentPage.compute()) {
-    return <Page />
-  }
 }
 
 const App = props => <div>
@@ -70,22 +99,29 @@ const App = props => <div>
       color: p.focused.compute() ? 'red' : 'black',
       borderBottom: '1px solid lightgrey'
     }} onRender={({ state }) => {
-      aim.register({
-        h: 50,
-        onFocus () {
-          state.set({ focused: true })
-        },
-        onBlur () {
-          state.set({ focused: false })
-        }
-      }, [0, 0, state.key | 0])
-    }}>{ p.title.compute() }</div>)
+      registerTarget(state, { h: 50, w: 300 }, [0, 0, state.key | 0])
+    }} inject={listenForFocus(0)}>{ p.title.compute() }</div>)
   }</aside>
-  <Pages />
+  <Page />
 </div>
 
-document.body.appendChild(render(App, state))
+document.body.appendChild(render(App, hub))
 
-window.addEventListener('keydown', e => {
-  aim.handleKeyEvent(e)
+hub.connect('ws://localhost:3030')
+
+hub.on('incoming', data => {
+  console.log('WTF', data)
 })
+
+console.log(aim.children)
+
+const renderView = () => setTimeout(() => document.body.appendChild(util.render(aim, {
+  position: 'fixed',
+  bottom: 0,
+  left: 0,
+  width: '200px',
+  height: '200px',
+  fontSize: '10px'
+})))
+
+window.addEventListener('keydown', aim.handleKeyEvent)

@@ -1,42 +1,74 @@
 import { autoFocus, changeFocus, focusElement } from './focus'
 import { createBranch, createLeaf } from './create'
 
-const updateX = (parent, set) => {
-  if (parent.xEnd < set.xEnd) {
-    parent.xEnd = set.xEnd
-    parent.xMid = parent.x + (parent.xEnd - parent.x) / 2
-    if ('parent' in parent && parent.direction === 'x') {
-      const siblings = parent.parent.children
-      for (var i = siblings.length - 1; i >= 0; i--) {
-        const sibling = siblings[i]
-        sibling.xEnd = parent.xEnd
-        sibling.xMid = parent.xMid
+const updateX = (child, xDiff) => {
+  child.x += xDiff
+  child.xEnd += xDiff
+  child.xMid = child.x - (child.xEnd - child.x) / 2
+  if ('children' in child) {
+    for (var i = child.children.length - 1; i >= 0; i--) {
+      updateX(child.children[i], xDiff)
+    }
+  }
+}
+
+const updateY = (child, xDiff) => {
+  child.x += xDiff
+  child.xEnd += xDiff
+  child.xMid = child.x - (child.xEnd - child.x) / 2
+  if ('children' in child) {
+    for (var i = child.children.length - 1; i >= 0; i--) {
+      updateX(child.children[i], xDiff)
+    }
+  }
+}
+
+const updateXEnd = (parent, xEnd) => {
+  if (parent.xEnd < xEnd) {
+    parent.xMid = parent.x + (xEnd - parent.x) / 2
+    if ('parent' in parent) {
+      if (parent.direction === 'x') {
+        const siblings = parent.parent.children
+        for (var i = siblings.length - 1; i >= 0; i--) {
+          const sibling = siblings[i]
+          sibling.xEnd = xEnd
+          sibling.xMid = parent.xMid
+        }
+      } else {
+        const nextSibling = parent.parent.children[parent.index + 1]
+        if (nextSibling) updateX(nextSibling, xEnd - parent.xEnd)
       }
     }
+    parent.xEnd = xEnd
     return parent
   }
 }
 
-const updateY = (parent, set) => {
-  if (parent.yEnd < set.yEnd) {
-    parent.yEnd = set.yEnd
-    parent.yMid = parent.y + (parent.yEnd - parent.y) / 2
-    if ('parent' in parent && parent.direction === 'y') {
-      const siblings = parent.parent.children
-      for (var i = siblings.length - 1; i >= 0; i--) {
-        const sibling = siblings[i]
-        sibling.yEnd = parent.yEnd
-        sibling.yMid = parent.yMid
+const updateYEnd = (parent, yEnd) => {
+  if (parent.yEnd < yEnd) {
+    parent.yMid = parent.y + (yEnd - parent.y) / 2
+    if ('parent' in parent) {
+      if (parent.direction === 'y') {
+        const siblings = parent.parent.children
+        for (var i = siblings.length - 1; i >= 0; i--) {
+          const sibling = siblings[i]
+          sibling.yEnd = yEnd
+          sibling.yMid = parent.yMid
+        }
+      } else {
+        const nextSibling = parent.parent.children[parent.index + 1]
+        if (nextSibling) updateY(nextSibling, yEnd - parent.yEnd)
       }
     }
+    parent.yEnd = yEnd
     return parent
   }
 }
 
 const updateParentPositions = (parent, set) => {
   while (parent) {
-    const changedX = updateX(parent, set)
-    const changedY = updateY(parent, set)
+    const changedX = updateXEnd(parent, set.xEnd)
+    const changedY = updateYEnd(parent, set.yEnd)
     if (changedY || changedX) {
       set = parent
       parent = parent.parent
@@ -231,9 +263,7 @@ const aim = {
     target.yOffset = y
     if (h !== void 0) target.hOffset = h
   },
-  focus (target) {
-    if (target !== aim.currentFocus) return focusElement(aim, target)
-  }
+  focus: target => focusElement(aim, target)
 }
 
 export default aim

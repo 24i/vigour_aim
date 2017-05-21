@@ -3,18 +3,24 @@ const autoFocus = (aim, set) => {
     aim.autoFocusTimer = setTimeout(() => {
       aim.autoFocusTimer = null
       if (!aim.currentFocus) {
-        set.onFocus(set)
-        aim.currentFocus = set
+        focusElement(aim, set)
       }
     })
   }
 }
 
 const focusElement = (aim, target) => {
-  if (target.onFocus(target) !== false) {
-    aim.currentFocus.onBlur(aim.currentFocus)
-    aim.currentFocus = target
-    return target
+  if (target !== aim.currentFocusAttempt) {
+    aim.currentFocusAttempt = target
+    if (!('onFocus' in target) || target.onFocus(target, aim) !== false) {
+      const blurTarget = aim.currentFocus
+      aim.currentFocus = target
+      if (blurTarget && 'onBlur' in blurTarget) {
+        blurTarget.onBlur(blurTarget, aim)
+      }
+      return target
+    }
+    aim.currentFocusAttempt = null
   }
 }
 
