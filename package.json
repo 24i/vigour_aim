@@ -20,5 +20,6 @@
     "stamp": "^4.0.2",
     "standard": "^8.1.0",
     "task": "latest"
-  }
+  },
+  "version": "0.0.4"
 }
