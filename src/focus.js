@@ -53,25 +53,31 @@ const findClosestDescendant = (aim, child) => {
         left = !left || child.y > left ? child.y : left
         right = left + child.hOffset
       }
+      let next
       for (let i = 0, l = children.length, diff; i < l; i++) {
-        const next = children[i]
-        const a = x - next.xMid - xOffset
-        const b = y - next.yMid - yOffset
-        const c = Math.sqrt(a * a + b * b)
-        if (diff === void 0 || c < diff) {
-          if (top || bottom) {
-            if (next.y + yOffset >= bottom || next.yEnd + yOffset <= top) {
-              continue
+        if (i in children) {
+          next = children[i]
+          const a = x - next.xMid - xOffset
+          const b = y - next.yMid - yOffset
+          const c = Math.sqrt(a * a + b * b)
+          if (diff === void 0 || c < diff) {
+            if (top || bottom) {
+              if (next.y + yOffset >= bottom || next.yEnd + yOffset <= top) {
+                continue
+              }
             }
-          }
-          if (left || right) {
-            if (next.x + xOffset >= right || next.xEnd + xOffset <= left) {
-              continue
+            if (left || right) {
+              if (next.x + xOffset >= right || next.xEnd + xOffset <= left) {
+                continue
+              }
             }
+            child = next
+            diff = c
           }
-          child = next
-          diff = c
         }
+      }
+      if (!next) {
+        return
       }
     }
   }
@@ -84,12 +90,22 @@ const changeFocus = (aim, direction, delta) => {
   // walk up from currentFocus
   while (parent) {
     if (parent.direction === direction) {
-      let sibling = target
       // if direction is correct walk (delta) sibling
-      while ((sibling = parent.children[sibling.index + delta])) {
-        const child = findClosestDescendant(aim, sibling)
-        // if new focus return
-        if (focusElement(aim, child)) return child
+      let i = target.index
+      if (delta < 0) {
+        for (; i >= 0; i--) {
+          if (i in parent.children) {
+            const child = findClosestDescendant(aim, parent.children[i])
+            if (child && focusElement(aim, child)) return child
+          }
+        }
+      } else {
+        for (let l = parent.children.length; i < l; i++) {
+          if (i in parent.children) {
+            const child = findClosestDescendant(aim, parent.children[i])
+            if (child && focusElement(aim, child)) return child
+          }
+        }
       }
     }
     target = parent

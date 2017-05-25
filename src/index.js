@@ -7,7 +7,7 @@ const updateX = (child, xDiff) => {
   child.xMid = child.x - (child.xEnd - child.x) / 2
   if ('children' in child) {
     for (var i = child.children.length - 1; i >= 0; i--) {
-      updateX(child.children[i], xDiff)
+      if (i in child.children) updateX(child.children[i], xDiff)
     }
   }
 }
@@ -18,7 +18,7 @@ const updateY = (child, xDiff) => {
   child.xMid = child.x - (child.xEnd - child.x) / 2
   if ('children' in child) {
     for (var i = child.children.length - 1; i >= 0; i--) {
-      updateX(child.children[i], xDiff)
+      if (i in child.children) updateX(child.children[i], xDiff)
     }
   }
 }
@@ -27,16 +27,23 @@ const updateXEnd = (parent, xEnd) => {
   if (parent.xEnd < xEnd) {
     parent.xMid = parent.x + (xEnd - parent.x) / 2
     if ('parent' in parent) {
+      const siblings = parent.parent.children
+      let l = siblings.length
       if (parent.direction === 'x') {
-        const siblings = parent.parent.children
-        for (var i = siblings.length - 1; i >= 0; i--) {
-          const sibling = siblings[i]
-          sibling.xEnd = xEnd
-          sibling.xMid = parent.xMid
+        for (let i = l - 1; i >= 0; i--) {
+          if (i in siblings) {
+            const sibling = siblings[i]
+            sibling.xEnd = xEnd
+            sibling.xMid = parent.xMid
+          }
         }
       } else {
-        const nextSibling = parent.parent.children[parent.index + 1]
-        if (nextSibling) updateX(nextSibling, xEnd - parent.xEnd)
+        for (let i = parent.index + 1; i < l; i++) {
+          if (i in siblings) {
+            updateX(siblings[i], xEnd - parent.xEnd)
+            break
+          }
+        }
       }
     }
     parent.xEnd = xEnd
@@ -48,16 +55,23 @@ const updateYEnd = (parent, yEnd) => {
   if (parent.yEnd < yEnd) {
     parent.yMid = parent.y + (yEnd - parent.y) / 2
     if ('parent' in parent) {
+      const siblings = parent.parent.children
+      let l = siblings.length
       if (parent.direction === 'y') {
-        const siblings = parent.parent.children
-        for (var i = siblings.length - 1; i >= 0; i--) {
-          const sibling = siblings[i]
-          sibling.yEnd = yEnd
-          sibling.yMid = parent.yMid
+        for (let i = l - 1; i >= 0; i--) {
+          if (i in siblings) {
+            const sibling = siblings[i]
+            sibling.yEnd = yEnd
+            sibling.yMid = parent.yMid
+          }
         }
       } else {
-        const nextSibling = parent.parent.children[parent.index + 1]
-        if (nextSibling) updateY(nextSibling, yEnd - parent.yEnd)
+        for (let i = parent.index + 1; i < l; i++) {
+          if (i in siblings) {
+            updateY(siblings[i], yEnd - parent.yEnd)
+            break
+          }
+        }
       }
     }
     parent.yEnd = yEnd
@@ -124,22 +138,22 @@ const updatePositions = parent => {
 
 const events = {
   left: {
-    name: 'onLeft',
+    name: 'onArrowLeft',
     direction: 'x',
     delta: -1
   },
   right: {
-    name: 'onRight',
+    name: 'onArrowRight',
     direction: 'x',
     delta: 1
   },
   up: {
-    name: 'onUp',
+    name: 'onArrowUp',
     direction: 'y',
     delta: -1
   },
   down: {
-    name: 'onDown',
+    name: 'onArrowDown',
     direction: 'y',
     delta: 1
   },
@@ -178,9 +192,10 @@ const aim = {
   handleKeyEvent (e) {
     if (e.keyCode in keys) {
       const event = keys[e.keyCode]
-      const handled = event.name in aim.currentFocus &&
-        aim.currentFocus[event.name](aim.currentFocus)
-      if (handled === false && 'direction' in event) {
+      if (event.name in aim.currentFocus) {
+        var handled = aim.currentFocus[event.name](aim.currentFocus)
+      }
+      if (handled !== false && 'direction' in event) {
         if (changeFocus(aim, event.direction, event.delta)) {
           e.preventDefault()
         }

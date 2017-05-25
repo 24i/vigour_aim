@@ -42,9 +42,7 @@ const listenForFocus = columnIndex => ({
     $: 'focused',
     render: {
       state: (t, s) => {
-        console.log('fire:', s.compute(), s.path())
         if (s.compute()) {
-          console.log('?????', [0, columnIndex, s._p.key | 0])
           const target = aim.get([0, columnIndex, s._p.key | 0])
           if (target) aim.focus(target)
           renderView()
@@ -108,12 +106,6 @@ const App = props => <div>
 document.body.appendChild(render(App, hub))
 
 hub.connect('ws://localhost:3030')
-
-hub.on('incoming', data => {
-  console.log('WTF', data)
-})
-
-console.log(aim.children)
 
 const renderView = () => setTimeout(() => document.body.appendChild(util.render(aim, {
   position: 'fixed',

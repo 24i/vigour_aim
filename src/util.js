@@ -14,8 +14,10 @@ const renderChild = (aim, root, target, position) => {
 
   if ('children' in target) {
     for (let i = 0, l = target.children.length; i < l; i++) {
-      const child = target.children[i]
-      root.appendChild(renderChild(aim, root, child, position.concat(child.index)))
+      if (i in target.children) {
+        const child = target.children[i]
+        root.appendChild(renderChild(aim, root, child, position.concat(child.index)))
+      }
     }
   } else {
     div.innerHTML = JSON.stringify(position)
