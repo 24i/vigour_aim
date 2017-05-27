@@ -193,11 +193,16 @@ const aim = {
     if (e.keyCode in keys) {
       const event = keys[e.keyCode]
       if (event.name in aim.currentFocus) {
-        var handled = aim.currentFocus[event.name](aim.currentFocus)
+        var useDefaultBehaviour = aim.currentFocus[event.name](aim.currentFocus)
       }
-      if (handled !== false && 'direction' in event) {
-        if (changeFocus(aim, event.direction, event.delta)) {
-          e.preventDefault()
+      if (useDefaultBehaviour === false) {
+        return aim.currentFocus
+      } else {
+        if ('direction' in event) {
+          if (changeFocus(aim, event.direction, event.delta)) {
+            e.preventDefault()
+            return aim.currentFocus
+          }
         }
       }
     }
@@ -240,7 +245,9 @@ const aim = {
       children = target.children
     }
     for (var i = index + 1; i < length; i++) {
-      children[children[i].index = i - 1] = children[i]
+      if (i in children) {
+        children[children[i].index = i - 1] = children[i]
+      }
     }
     children.pop()
   },

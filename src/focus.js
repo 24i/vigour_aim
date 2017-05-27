@@ -12,11 +12,11 @@ const autoFocus = (aim, set) => {
 const focusElement = (aim, target) => {
   if (target !== aim.currentFocusAttempt) {
     aim.currentFocusAttempt = target
-    if (!('onFocus' in target) || target.onFocus(target, aim) !== false) {
+    if (!('onFocus' in target) || target.onFocus(target) !== false) {
       const blurTarget = aim.currentFocus
       aim.currentFocus = target
       if (blurTarget && 'onBlur' in blurTarget) {
-        blurTarget.onBlur(blurTarget, aim)
+        blurTarget.onBlur(blurTarget)
       }
       return target
     }
