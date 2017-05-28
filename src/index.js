@@ -256,14 +256,16 @@ const aim = {
       target = target.parent
       children = target.children
     }
-    for (var i = index + 1; i < length; i++) {
-      if (i in children) {
-        children[children[i].index = i - 1] = children[i]
-      } else {
-        delete children[i - 1]
+
+    // why do we need this check???
+    if (index < length) {
+      for (var i = index + 1; i < length; i++) {
+        if (i in children) {
+          children[children[i].index = i - 1] = children[i]
+        } else {
+          delete children[i - 1]
+        }
       }
-    }
-    if (children[index]) {
       children.pop()
     }
   },

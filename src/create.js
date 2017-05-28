@@ -1,5 +1,5 @@
 const createBranch = (parent, index) => {
-  if (index in parent.children) {
+  if (index in parent.children && 'children' in parent.children[index]) {
     return parent.children[index]
   } else {
     const child = { index, children: [], parent }
@@ -52,6 +52,7 @@ const createLeaf = (parent, index, set) => {
     }
   } else {
     if (!('x' in set)) {
+
       set.x = parent.x
       if (index) {
         for (let i = index - 1; i >= 0; i--) {
