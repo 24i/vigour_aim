@@ -159,6 +159,9 @@ const events = {
   },
   enter: {
     name: 'onEnter'
+  },
+  back: {
+    name: 'onBack'
   }
 }
 
@@ -167,7 +170,8 @@ const keys = {
   37: events.left,
   38: events.up,
   39: events.right,
-  40: events.down
+  40: events.down,
+  8: events.back
 }
 
 const aim = {
@@ -226,10 +230,9 @@ const aim = {
     - position (obj) eg [0,0,0]
   */
   unregister (target) {
-    const index = target.index
+    var index = target.index
     var children = target.parent.children
     var length
-
     if (aim.currentFocus === target) {
       const sibling = children[index ? index - 1 : index + 1]
       if (sibling) {
@@ -243,10 +246,13 @@ const aim = {
     }
     while ((length = children.length) === 1 && (target = target.parent)) {
       children = target.children
+      index = target.index
     }
     for (var i = index + 1; i < length; i++) {
       if (i in children) {
         children[children[i].index = i - 1] = children[i]
+      } else {
+        delete children[i - 1]
       }
     }
     children.pop()
