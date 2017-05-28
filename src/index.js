@@ -100,7 +100,11 @@ const setOnPosition = (position, set) => {
     index = position[++i]
   }
   createLeaf(parent, index, set)
-  updateParentPositions(parent, set)
+  if (parent.children.length > index + 1) {
+    updatePositions(parent)
+  } else {
+    updateParentPositions(parent, set)
+  }
 }
 
 const resetParentPositions = parent => {
@@ -115,22 +119,25 @@ const resetParentPositions = parent => {
 
 const updatePositions = parent => {
   var children = parent.children
+  var prevEnd
   for (var i = 0, max = children.length - 1; i <= max; i++) {
-    const target = children[i]
-    if ('children' in target) {
-      updatePositions(target)
-    } else {
-      if (parent.direction === 'y') {
-        target.y = i ? children[i - 1].yEnd : parent.y
-        target.yMid = target.y + (target.h || 1) / 2
-        target.yEnd = target.y + (target.h || 1)
+    if (i in children) {
+      const target = children[i]
+      if ('children' in target) {
+        updatePositions(target)
       } else {
-        target.x = i ? children[i - 1].xEnd : parent.x
-        target.xMid = target.x + (target.w || 1) / 2
-        target.xEnd = target.x + (target.w || 1)
-      }
-      if (max === i) {
-        updateParentPositions(parent, target)
+        if (parent.direction === 'y') {
+          target.y = prevEnd || parent.y
+          target.yMid = target.y + (target.h || 1) / 2
+          prevEnd = target.yEnd = target.y + (target.h || 1)
+        } else {
+          target.x = prevEnd || parent.x
+          target.xMid = target.x + (target.w || 1) / 2
+          prevEnd = target.xEnd = target.x + (target.w || 1)
+        }
+        if (max === i) {
+          updateParentPositions(parent, target)
+        }
       }
     }
   }
@@ -244,9 +251,10 @@ const aim = {
               changeFocus(aim, 'y', 1)
       }
     }
-    while ((length = children.length) === 1 && (target = target.parent)) {
-      children = target.children
+    while ((length = children.length) === 1 && ('parent' in target)) {
       index = target.index
+      target = target.parent
+      children = target.children
     }
     for (var i = index + 1; i < length; i++) {
       if (i in children) {
@@ -255,7 +263,9 @@ const aim = {
         delete children[i - 1]
       }
     }
-    children.pop()
+    if (children[index]) {
+      children.pop()
+    }
   },
   /*
     unregister target, this can happen on eg. remove

@@ -6,7 +6,6 @@ const createBranch = (parent, index) => {
     if (parent.direction === 'y') {
       child.direction = 'x'
       child.x = parent.x
-      // child.y = index ? createBranch(parent, index - 1).yEnd : parent.y
       child.y = parent.y
       if (index) {
         for (let i = index - 1; i >= 0; i--) {
@@ -21,7 +20,6 @@ const createBranch = (parent, index) => {
     } else {
       child.direction = 'y'
       child.y = parent.y
-      // child.x = index ? createBranch(parent, index - 1).xEnd : parent.x
       child.x = parent.x
       if (index) {
         for (let i = index - 1; i >= 0; i--) {

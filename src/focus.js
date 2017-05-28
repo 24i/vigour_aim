@@ -91,7 +91,7 @@ const changeFocus = (aim, direction, delta) => {
   while (parent) {
     if (parent.direction === direction) {
       // if direction is correct walk (delta) sibling
-      let i = target.index
+      let i = target.index + delta
       if (delta < 0) {
         for (; i >= 0; i--) {
           if (i in parent.children) {
