@@ -241,15 +241,8 @@ const aim = {
     var children = target.parent.children
     var length
     if (aim.currentFocus === target) {
-      const sibling = children[index ? index - 1 : index + 1]
-      if (sibling) {
-        focusElement(aim, sibling)
-      } else {
-        changeFocus(aim, 'x', -1) ||
-          changeFocus(aim, 'y', -1) ||
-            changeFocus(aim, 'x', 1) ||
-              changeFocus(aim, 'y', 1)
-      }
+      changeFocus(aim, 'x', -1) || changeFocus(aim, 'y', -1) ||
+        changeFocus(aim, 'x', 1) || changeFocus(aim, 'y', 1)
     }
     while ((length = children.length) === 1 && ('parent' in target)) {
       index = target.index
@@ -303,7 +296,11 @@ const aim = {
     target.yOffset = y
     if (h !== void 0) target.hOffset = h
   },
-  focus: target => focusElement(aim, target)
+  focus: target => {
+    if (!('children' in target)) {
+      return focusElement(aim, target)
+    }
+  }
 }
 
 export default aim
