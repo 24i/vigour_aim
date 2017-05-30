@@ -169,16 +169,24 @@ const events = {
   },
   back: {
     name: 'onBack'
+  },
+  space: {
+    name: 'onSpace'
+  },
+  escape: {
+    name: 'onEscape'
   }
 }
 
 const keys = {
+  8: events.back,
   13: events.enter,
+  27: events.escape,
+  32: events.space,
   37: events.left,
   38: events.up,
   39: events.right,
-  40: events.down,
-  8: events.back
+  40: events.down
 }
 
 const aim = {
