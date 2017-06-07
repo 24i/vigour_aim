@@ -4,7 +4,6 @@ import { createBranch, createLeaf } from './create'
 const updateX = (child, xDiff) => {
   child.x += xDiff
   child.xEnd += xDiff
-  child.xMid = child.x + (child.xEnd - child.x) / 2
   if ('children' in child) {
     for (var i = child.children.length - 1; i >= 0; i--) {
       if (i in child.children) {
@@ -17,7 +16,6 @@ const updateX = (child, xDiff) => {
 const updateY = (child, yDiff) => {
   child.y += yDiff
   child.yEnd += yDiff
-  child.yMid = child.y + (child.yEnd - child.y) / 2
   if ('children' in child) {
     for (var i = child.children.length - 1; i >= 0; i--) {
       if (i in child.children) {
@@ -29,17 +27,12 @@ const updateY = (child, yDiff) => {
 
 const updateXEnd = (parent, xEnd) => {
   if (parent.xEnd < xEnd) {
-    parent.xMid = parent.x + (xEnd - parent.x) / 2
     if ('parent' in parent) {
       const siblings = parent.parent.children
       let l = siblings.length
       if (parent.direction === 'x') {
         for (let i = l - 1; i >= 0; i--) {
-          if (i in siblings) {
-            const sibling = siblings[i]
-            sibling.xEnd = xEnd
-            sibling.xMid = parent.xMid
-          }
+          if (i in siblings) siblings[i].xEnd = xEnd
         }
       } else {
         for (let i = parent.index + 1; i < l; i++) {
@@ -57,17 +50,12 @@ const updateXEnd = (parent, xEnd) => {
 
 const updateYEnd = (parent, yEnd) => {
   if (parent.yEnd < yEnd) {
-    parent.yMid = parent.y + (yEnd - parent.y) / 2
     if ('parent' in parent) {
       const siblings = parent.parent.children
       let l = siblings.length
       if (parent.direction === 'y') {
         for (let i = l - 1; i >= 0; i--) {
-          if (i in siblings) {
-            const sibling = siblings[i]
-            sibling.yEnd = yEnd
-            sibling.yMid = parent.yMid
-          }
+          if (i in siblings) siblings[i].yEnd = yEnd
         }
       } else {
         for (let i = parent.index + 1; i < l; i++) {
@@ -131,13 +119,11 @@ const updatePositions = parent => {
         updatePositions(target)
       } else {
         if (parent.direction === 'y') {
-          target.y = prevEnd || parent.y
-          target.yMid = target.y + (target.h || 1) / 2
-          prevEnd = target.yEnd = target.y + (target.h || 1)
+          target.y = prevEnd ? prevEnd + 1 : parent.y
+          prevEnd = target.yEnd = target.y + (target.h || 0)
         } else {
-          target.x = prevEnd || parent.x
-          target.xMid = target.x + (target.w || 1) / 2
-          prevEnd = target.xEnd = target.x + (target.w || 1)
+          target.x = prevEnd ? prevEnd + 1 : parent.x
+          prevEnd = target.xEnd = target.x + (target.w || 0)
         }
         if (max === i) {
           updateParentPositions(parent, target)
@@ -196,10 +182,8 @@ const keys = {
 const aim = {
   currentFocus: false,
   x: 0,
-  xMid: 0,
   xEnd: 0,
   y: 0,
-  yMid: 0,
   yEnd: 0,
   children: [],
   /*
@@ -260,9 +244,9 @@ const aim = {
 
     while ((length = children.length) === 1 && ('parent' in target)) {
       index = target.index
+      parent = target.parent
       children = target.children
       target = parent
-      parent = target.parent
     }
 
     if (index === length - 1) {
@@ -270,10 +254,8 @@ const aim = {
       // this is not enough
       if (parent.direction === 'y') {
         parent.yEnd = target.y
-        parent.yMid = parent.y + (parent.yEnd - parent.y) / 2
       } else {
         parent.xEnd = target.x
-        parent.xMid = parent.x + (parent.xEnd - parent.x) / 2
       }
     } else {
       delete children[index]

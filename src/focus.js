@@ -28,8 +28,8 @@ const findClosestDescendant = (aim, child) => {
   if ('children' in child) {
     let current = aim.currentFocus
     let parent = current
-    let x = current.xMid
-    let y = current.yMid
+    let x = current.x + (current.xEnd - current.x) / 2
+    let y = current.y + (current.yEnd - current.y) / 2
     let xOffset = 0
     let yOffset = 0
     let top, left, right, bottom
@@ -57,9 +57,17 @@ const findClosestDescendant = (aim, child) => {
       for (let i = 0, l = children.length, diff; i < l; i++) {
         if (i in children) {
           next = children[i]
-          const a = x - next.xMid - xOffset
-          const b = y - next.yMid - yOffset
+          // optimize this!
+          const a = Math.min(
+            Math.abs(x - next.x - xOffset),
+            Math.abs(x - next.xEnd - xOffset)
+          )
+          const b = Math.min(
+            Math.abs(y - next.y - yOffset),
+            Math.abs(y - next.yEnd - yOffset)
+          )
           const c = Math.sqrt(a * a + b * b)
+
           if (diff === void 0 || c < diff) {
             if (top || bottom) {
               if (next.y + yOffset >= bottom || next.yEnd + yOffset <= top) {

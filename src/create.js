@@ -10,12 +10,11 @@ const createBranch = (parent, index) => {
       if (index) {
         for (let i = index - 1; i >= 0; i--) {
           if (i in parent.children) {
-            child.y = parent.children[i].yEnd
+            child.y = parent.children[i].yEnd + 1
             break
           }
         }
       }
-      console.log('y??',child.y )
       child.xEnd = parent.xEnd
       child.yEnd = child.y
     } else {
@@ -25,12 +24,11 @@ const createBranch = (parent, index) => {
       if (index) {
         for (let i = index - 1; i >= 0; i--) {
           if (i in parent.children) {
-            child.x = parent.children[i].xEnd
+            child.x = parent.children[i].xEnd + 1
             break
           }
         }
       }
-      console.log('x??',child.y )
       child.yEnd = parent.yEnd
       child.xEnd = child.x
     }
@@ -46,12 +44,11 @@ const createLeaf = (parent, index, set) => {
       if (index) {
         for (let i = index - 1; i >= 0; i--) {
           if (i in parent.children) {
-            set.y = parent.children[i].yEnd
+            set.y = parent.children[i].yEnd + 1
             break
           }
         }
       }
-      console.log('set.y = parent.y', set.y)
     }
   } else {
     if (!('x' in set)) {
@@ -59,7 +56,7 @@ const createLeaf = (parent, index, set) => {
       if (index) {
         for (let i = index - 1; i >= 0; i--) {
           if (i in parent.children) {
-            set.x = parent.children[i].xEnd
+            set.x = parent.children[i].xEnd + 1
             break
           }
         }
@@ -67,14 +64,11 @@ const createLeaf = (parent, index, set) => {
     }
     if (!('y' in set)) {
       set.y = parent.y
-      console.log('222set.y = parent.y', set.y)
     }
   }
   set.index = index
-  set.xMid = set.x + (set.w || 1) / 2
-  set.xEnd = set.x + (set.w || 1)
-  set.yMid = set.y + (set.h || 1) / 2
-  set.yEnd = set.y + (set.h || 1)
+  set.xEnd = set.x + (set.w || 0)
+  set.yEnd = set.y + (set.h || 0)
   set.parent = parent
   parent.children[index] = set
 }
