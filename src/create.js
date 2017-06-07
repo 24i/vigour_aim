@@ -15,6 +15,7 @@ const createBranch = (parent, index) => {
           }
         }
       }
+      console.log('y??',child.y )
       child.xEnd = parent.xEnd
       child.yEnd = child.y
     } else {
@@ -29,6 +30,7 @@ const createBranch = (parent, index) => {
           }
         }
       }
+      console.log('x??',child.y )
       child.yEnd = parent.yEnd
       child.xEnd = child.x
     }
@@ -49,10 +51,10 @@ const createLeaf = (parent, index, set) => {
           }
         }
       }
+      console.log('set.y = parent.y', set.y)
     }
   } else {
     if (!('x' in set)) {
-
       set.x = parent.x
       if (index) {
         for (let i = index - 1; i >= 0; i--) {
@@ -63,7 +65,10 @@ const createLeaf = (parent, index, set) => {
         }
       }
     }
-    if (!('y' in set)) set.y = parent.y
+    if (!('y' in set)) {
+      set.y = parent.y
+      console.log('222set.y = parent.y', set.y)
+    }
   }
   set.index = index
   set.xMid = set.x + (set.w || 1) / 2

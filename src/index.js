@@ -4,21 +4,25 @@ import { createBranch, createLeaf } from './create'
 const updateX = (child, xDiff) => {
   child.x += xDiff
   child.xEnd += xDiff
-  child.xMid = child.x - (child.xEnd - child.x) / 2
+  child.xMid = child.x + (child.xEnd - child.x) / 2
   if ('children' in child) {
     for (var i = child.children.length - 1; i >= 0; i--) {
-      if (i in child.children) updateX(child.children[i], xDiff)
+      if (i in child.children) {
+        updateX(child.children[i], xDiff)
+      }
     }
   }
 }
 
-const updateY = (child, xDiff) => {
-  child.x += xDiff
-  child.xEnd += xDiff
-  child.xMid = child.x - (child.xEnd - child.x) / 2
+const updateY = (child, yDiff) => {
+  child.y += yDiff
+  child.yEnd += yDiff
+  child.yMid = child.y + (child.yEnd - child.y) / 2
   if ('children' in child) {
     for (var i = child.children.length - 1; i >= 0; i--) {
-      if (i in child.children) updateX(child.children[i], xDiff)
+      if (i in child.children) {
+        updateY(child.children[i], yDiff)
+      }
     }
   }
 }
@@ -246,29 +250,45 @@ const aim = {
   */
   unregister (target) {
     var index = target.index
-    var children = target.parent.children
+    var parent = target.parent
+    var children = parent.children
     var length
     if (aim.currentFocus === target) {
       changeFocus(aim, 'x', -1) || changeFocus(aim, 'y', -1) ||
         changeFocus(aim, 'x', 1) || changeFocus(aim, 'y', 1)
     }
+
     while ((length = children.length) === 1 && ('parent' in target)) {
       index = target.index
-      target = target.parent
       children = target.children
+      target = parent
+      parent = target.parent
     }
 
-    // why do we need this check???
-    if (index < length) {
-      for (var i = index + 1; i < length; i++) {
-        if (i in children) {
-          children[children[i].index = i - 1] = children[i]
-        } else {
-          delete children[i - 1]
-        }
-      }
+    if (index === length - 1) {
       children.pop()
+      // this is not enough
+      if (parent.direction === 'y') {
+        parent.yEnd = target.y
+        parent.yMid = parent.y + (parent.yEnd - parent.y) / 2
+      } else {
+        parent.xEnd = target.x
+        parent.xMid = parent.x + (parent.xEnd - parent.x) / 2
+      }
+    } else {
+      delete children[index]
     }
+    // // why do we need this check???
+    // if (index < length) {
+    //   for (var i = index + 1; i < length; i++) {
+    //     if (i in children) {
+    //       children[children[i].index = i - 1] = children[i]
+    //     } else {
+    //       delete children[i - 1]
+    //     }
+    //   }
+    //   children.pop()
+    // }
   },
   /*
     unregister target, this can happen on eg. remove
