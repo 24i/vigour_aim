@@ -245,7 +245,7 @@ const aim = {
     while ((length = children.length) === 1 && ('parent' in target)) {
       index = target.index
       parent = target.parent
-      children = target.children
+      children = parent.children
       target = parent
     }
 
