@@ -226,7 +226,7 @@ const aim = {
   */
   register (target, position) {
     setOnPosition(position, target)
-    // autoFocus(aim, target)
+    autoFocus(aim, target)
     return target
   },
   /*
