@@ -7,30 +7,42 @@ const createBranch = (parent, index) => {
       child.direction = 'x'
       child.x = parent.x
       child.y = parent.y
+      child.xEnd = parent.xEnd
+      child.yEnd = child.y
       if (index) {
         for (let i = index - 1; i >= 0; i--) {
           if (i in parent.children) {
-            child.y = parent.children[i].yEnd
+            child.y = parent.children[i].yEnd + 1
             break
           }
         }
       }
-      child.xEnd = parent.xEnd
-      child.yEnd = child.y
+      for (let i = 0, l = parent.children.length; i < l; i++) {
+        if (i in parent.children) {
+          child.yEnd = parent.children[i].y - 1
+          break
+        }
+      }
     } else {
       child.direction = 'y'
       child.y = parent.y
       child.x = parent.x
+      child.yEnd = parent.yEnd
+      child.xEnd = child.x
       if (index) {
         for (let i = index - 1; i >= 0; i--) {
           if (i in parent.children) {
-            child.x = parent.children[i].xEnd
+            child.x = parent.children[i].xEnd + 1
             break
           }
         }
       }
-      child.yEnd = parent.yEnd
-      child.xEnd = child.x
+      for (let i = 0, l = parent.children.length; i < l; i++) {
+        if (i in parent.children) {
+          child.xEnd = parent.children[i].x - 1
+          break
+        }
+      }
     }
     return (parent.children[index] = child)
   }
@@ -44,7 +56,7 @@ const createLeaf = (parent, index, set) => {
       if (index) {
         for (let i = index - 1; i >= 0; i--) {
           if (i in parent.children) {
-            set.y = parent.children[i].yEnd
+            set.y = parent.children[i].yEnd + 1
             break
           }
         }
@@ -52,24 +64,23 @@ const createLeaf = (parent, index, set) => {
     }
   } else {
     if (!('x' in set)) {
-
       set.x = parent.x
       if (index) {
         for (let i = index - 1; i >= 0; i--) {
           if (i in parent.children) {
-            set.x = parent.children[i].xEnd
+            set.x = parent.children[i].xEnd + 1
             break
           }
         }
       }
     }
-    if (!('y' in set)) set.y = parent.y
+    if (!('y' in set)) {
+      set.y = parent.y
+    }
   }
   set.index = index
-  set.xMid = set.x + (set.w || 1) / 2
-  set.xEnd = set.x + (set.w || 1)
-  set.yMid = set.y + (set.h || 1) / 2
-  set.yEnd = set.y + (set.h || 1)
+  set.xEnd = set.x + (set.w || 0)
+  set.yEnd = set.y + (set.h || 0)
   set.parent = parent
   parent.children[index] = set
 }

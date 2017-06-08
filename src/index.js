@@ -4,38 +4,35 @@ import { createBranch, createLeaf } from './create'
 const updateX = (child, xDiff) => {
   child.x += xDiff
   child.xEnd += xDiff
-  child.xMid = child.x - (child.xEnd - child.x) / 2
   if ('children' in child) {
     for (var i = child.children.length - 1; i >= 0; i--) {
-      if (i in child.children) updateX(child.children[i], xDiff)
+      if (i in child.children) {
+        updateX(child.children[i], xDiff)
+      }
     }
   }
 }
 
-const updateY = (child, xDiff) => {
-  child.x += xDiff
-  child.xEnd += xDiff
-  child.xMid = child.x - (child.xEnd - child.x) / 2
+const updateY = (child, yDiff) => {
+  child.y += yDiff
+  child.yEnd += yDiff
   if ('children' in child) {
     for (var i = child.children.length - 1; i >= 0; i--) {
-      if (i in child.children) updateX(child.children[i], xDiff)
+      if (i in child.children) {
+        updateY(child.children[i], yDiff)
+      }
     }
   }
 }
 
 const updateXEnd = (parent, xEnd) => {
   if (parent.xEnd < xEnd) {
-    parent.xMid = parent.x + (xEnd - parent.x) / 2
     if ('parent' in parent) {
       const siblings = parent.parent.children
       let l = siblings.length
       if (parent.direction === 'x') {
         for (let i = l - 1; i >= 0; i--) {
-          if (i in siblings) {
-            const sibling = siblings[i]
-            sibling.xEnd = xEnd
-            sibling.xMid = parent.xMid
-          }
+          if (i in siblings) siblings[i].xEnd = xEnd
         }
       } else {
         for (let i = parent.index + 1; i < l; i++) {
@@ -53,16 +50,13 @@ const updateXEnd = (parent, xEnd) => {
 
 const updateYEnd = (parent, yEnd) => {
   if (parent.yEnd < yEnd) {
-    parent.yMid = parent.y + (yEnd - parent.y) / 2
     if ('parent' in parent) {
       const siblings = parent.parent.children
       let l = siblings.length
       if (parent.direction === 'y') {
         for (let i = l - 1; i >= 0; i--) {
           if (i in siblings) {
-            const sibling = siblings[i]
-            sibling.yEnd = yEnd
-            sibling.yMid = parent.yMid
+            siblings[i].yEnd = yEnd
           }
         }
       } else {
@@ -127,13 +121,11 @@ const updatePositions = parent => {
         updatePositions(target)
       } else {
         if (parent.direction === 'y') {
-          target.y = prevEnd || parent.y
-          target.yMid = target.y + (target.h || 1) / 2
-          prevEnd = target.yEnd = target.y + (target.h || 1)
+          target.y = prevEnd ? prevEnd + 1 : parent.y
+          prevEnd = target.yEnd = target.y + (target.h || 0)
         } else {
-          target.x = prevEnd || parent.x
-          target.xMid = target.x + (target.w || 1) / 2
-          prevEnd = target.xEnd = target.x + (target.w || 1)
+          target.x = prevEnd ? prevEnd + 1 : parent.x
+          prevEnd = target.xEnd = target.x + (target.w || 0)
         }
         if (max === i) {
           updateParentPositions(parent, target)
@@ -192,10 +184,8 @@ const keys = {
 const aim = {
   currentFocus: false,
   x: 0,
-  xMid: 0,
   xEnd: 0,
   y: 0,
-  yMid: 0,
   yEnd: 0,
   children: [],
   /*
@@ -246,29 +236,38 @@ const aim = {
   */
   unregister (target) {
     var index = target.index
-    var children = target.parent.children
+    var parent = target.parent
+    var children = parent.children
     var length
     if (aim.currentFocus === target) {
-      changeFocus(aim, 'x', -1) || changeFocus(aim, 'y', -1) ||
-        changeFocus(aim, 'x', 1) || changeFocus(aim, 'y', 1)
+      aim.currentFocus = false
+      // changeFocus(aim, 'y', -1) || changeFocus(aim, 'x', -1) ||
+      //   changeFocus(aim, 'y', 1) || changeFocus(aim, 'x', 1)
     }
     while ((length = children.length) === 1 && ('parent' in target)) {
       index = target.index
-      target = target.parent
-      children = target.children
+      parent = target.parent
+      children = parent.children
+      target = parent
     }
 
-    // why do we need this check???
-    if (index < length) {
-      for (var i = index + 1; i < length; i++) {
-        if (i in children) {
-          children[children[i].index = i - 1] = children[i]
-        } else {
-          delete children[i - 1]
-        }
-      }
+    if (index === length - 1) {
       children.pop()
+    } else {
+      delete children[index]
     }
+
+    // // why do we need this check???
+    // if (index < length) {
+      // for (var i = index + 1; i < length; i++) {
+      //   if (i in children) {
+      //     children[children[i].index = i - 1] = children[i]
+      //   } else {
+      //     delete children[i - 1]
+      //   }
+      // }
+      // children.pop()
+    // }
   },
   /*
     unregister target, this can happen on eg. remove
