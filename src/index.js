@@ -55,7 +55,9 @@ const updateYEnd = (parent, yEnd) => {
       let l = siblings.length
       if (parent.direction === 'y') {
         for (let i = l - 1; i >= 0; i--) {
-          if (i in siblings) siblings[i].yEnd = yEnd
+          if (i in siblings) {
+            siblings[i].yEnd = yEnd
+          }
         }
       } else {
         for (let i = parent.index + 1; i < l; i++) {
@@ -224,7 +226,7 @@ const aim = {
   */
   register (target, position) {
     setOnPosition(position, target)
-    autoFocus(aim, target)
+    // autoFocus(aim, target)
     return target
   },
   /*
@@ -238,10 +240,10 @@ const aim = {
     var children = parent.children
     var length
     if (aim.currentFocus === target) {
-      changeFocus(aim, 'x', -1) || changeFocus(aim, 'y', -1) ||
-        changeFocus(aim, 'x', 1) || changeFocus(aim, 'y', 1)
+      aim.currentFocus = false
+      // changeFocus(aim, 'y', -1) || changeFocus(aim, 'x', -1) ||
+      //   changeFocus(aim, 'y', 1) || changeFocus(aim, 'x', 1)
     }
-
     while ((length = children.length) === 1 && ('parent' in target)) {
       index = target.index
       parent = target.parent
@@ -251,25 +253,20 @@ const aim = {
 
     if (index === length - 1) {
       children.pop()
-      // this is not enough
-      if (parent.direction === 'y') {
-        parent.yEnd = target.y
-      } else {
-        parent.xEnd = target.x
-      }
     } else {
       delete children[index]
     }
+
     // // why do we need this check???
     // if (index < length) {
-    //   for (var i = index + 1; i < length; i++) {
-    //     if (i in children) {
-    //       children[children[i].index = i - 1] = children[i]
-    //     } else {
-    //       delete children[i - 1]
-    //     }
-    //   }
-    //   children.pop()
+      // for (var i = index + 1; i < length; i++) {
+      //   if (i in children) {
+      //     children[children[i].index = i - 1] = children[i]
+      //   } else {
+      //     delete children[i - 1]
+      //   }
+      // }
+      // children.pop()
     // }
   },
   /*

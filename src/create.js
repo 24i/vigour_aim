@@ -7,6 +7,8 @@ const createBranch = (parent, index) => {
       child.direction = 'x'
       child.x = parent.x
       child.y = parent.y
+      child.xEnd = parent.xEnd
+      child.yEnd = child.y
       if (index) {
         for (let i = index - 1; i >= 0; i--) {
           if (i in parent.children) {
@@ -15,12 +17,18 @@ const createBranch = (parent, index) => {
           }
         }
       }
-      child.xEnd = parent.xEnd
-      child.yEnd = child.y
+      for (let i = 0, l = parent.children.length; i < l; i++) {
+        if (i in parent.children) {
+          child.yEnd = parent.children[i].y - 1
+          break
+        }
+      }
     } else {
       child.direction = 'y'
       child.y = parent.y
       child.x = parent.x
+      child.yEnd = parent.yEnd
+      child.xEnd = child.x
       if (index) {
         for (let i = index - 1; i >= 0; i--) {
           if (i in parent.children) {
@@ -29,8 +37,12 @@ const createBranch = (parent, index) => {
           }
         }
       }
-      child.yEnd = parent.yEnd
-      child.xEnd = child.x
+      for (let i = 0, l = parent.children.length; i < l; i++) {
+        if (i in parent.children) {
+          child.xEnd = parent.children[i].x - 1
+          break
+        }
+      }
     }
     return (parent.children[index] = child)
   }
