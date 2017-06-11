@@ -1,6 +1,6 @@
 {
   "name": "aim",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "main": "dist/index.js",
   "description": "Dependency free focus manager with built-in universal key navigation.",
   "scripts": {
