@@ -199,7 +199,7 @@ const aim = {
   right: () => changeFocus(aim, events.right.direction, events.right.delta),
 
   handleKeyEvent (e) {
-    if (e.keyCode in keys && aim.currentFocus ) {
+    if (e.keyCode in keys && aim.currentFocus) {
       const event = keys[e.keyCode]
       if (event.name in aim.currentFocus) {
         var useDefaultBehaviour = aim.currentFocus[event.name](aim.currentFocus)
