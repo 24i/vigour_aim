@@ -8,6 +8,7 @@
     "watch": "builder-boy src/index.js dist/index.js -t node -r -w",
     "build": "builder-boy src/index.js dist/index.js -t node -r && npm run build-util",
     "build-util": "builder-boy src/util.js dist/util.js -t node -r",
+    "preversion": "npm run build",
     "version-commit": "npm --no-git-tag-version version $(node -pe \"require('./package.json').version.split('-')[0]\")-$(git log -n 1 --pretty=format:'%H')",
     "publish-branch": "npm run version-commit && npm publish --tag $(git rev-parse --abbrev-ref HEAD | sed 's/\\//-/g')"
   },
