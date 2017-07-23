@@ -1,13 +1,15 @@
 {
   "name": "aim",
-  "version": "0.0.12",
+  "version": "0.0.12-de0edcc9ebea9474d776a9f52aa8e30cfe6316d5",
   "main": "dist/index.js",
   "description": "Dependency free focus manager with built-in universal key navigation.",
   "scripts": {
     "dev": "task",
     "watch": "builder-boy src/index.js dist/index.js -t node -r -w",
     "build": "builder-boy src/index.js dist/index.js -t node -r && npm run build-util",
-    "build-util": "builder-boy src/util.js dist/util.js -t node -r"
+    "build-util": "builder-boy src/util.js dist/util.js -t node -r",
+    "version-commit": "npm --no-git-tag-version version $(node -pe \"require('./package.json').version.split('-')[0]\")-$(git log -n 1 --pretty=format:'%H')",
+    "publish-branch": "npm run version-commit && npm publish --tag $(git rev-parse --abbrev-ref HEAD | sed 's/\\//-/g')"
   },
   "files": [
     "dist"

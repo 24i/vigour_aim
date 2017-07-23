@@ -178,7 +178,17 @@ const keys = {
   37: events.left,
   38: events.up,
   39: events.right,
-  40: events.down
+  40: events.down,
+  205: events.left,
+  206: events.right,
+  203: events.up,
+  204: events.down,
+  195: events.enter,
+  196: events.back,
+  214: events.left,
+  213: events.right,
+  211: events.up,
+  212: events.down
 }
 
 const aim = {
