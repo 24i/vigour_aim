@@ -188,7 +188,9 @@ const keys = {
   214: events.left,
   213: events.right,
   211: events.up,
-  212: events.down
+  212: events.down,
+  461: events.back, // lg webos
+  10009: events.back // tizen
 }
 
 const aim = {
