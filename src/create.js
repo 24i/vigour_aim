@@ -1,8 +1,9 @@
 const createBranch = (parent, index) => {
-  if (index in parent.children && 'children' in parent.children[index]) {
-    return parent.children[index]
+  let child = parent.children[index]
+  if (child && 'children' in child) {
+    return child
   } else {
-    const child = { index, children: [], parent }
+    child = { index, children: [], parent }
     if (parent.direction === 'y') {
       child.direction = 'x'
       child.x = parent.x
