@@ -93,7 +93,11 @@ const setOnPosition = (position, set) => {
     parent = createBranch(parent, index)
     index = position[++i]
   }
-  createLeaf(parent, index, set)
+  if (index in parent.children && parent.children[index] === aim.currentFocus) {
+    aim.currentFocus = createLeaf(parent, index, set)
+  } else {
+    createLeaf(parent, index, set)
+  }
   if (parent.children.length > index + 1) {
     updatePositions(parent)
   } else {
@@ -253,8 +257,6 @@ const aim = {
     var length
     if (aim.currentFocus === target) {
       aim.currentFocus = false
-      // changeFocus(aim, 'y', -1) || changeFocus(aim, 'x', -1) ||
-      //   changeFocus(aim, 'y', 1) || changeFocus(aim, 'x', 1)
     }
     while ((length = children.length) === 1 && ('parent' in target)) {
       index = target.index
@@ -268,18 +270,6 @@ const aim = {
     } else {
       delete children[index]
     }
-
-    // // why do we need this check???
-    // if (index < length) {
-      // for (var i = index + 1; i < length; i++) {
-      //   if (i in children) {
-      //     children[children[i].index = i - 1] = children[i]
-      //   } else {
-      //     delete children[i - 1]
-      //   }
-      // }
-      // children.pop()
-    // }
   },
   /*
     unregister target, this can happen on eg. remove

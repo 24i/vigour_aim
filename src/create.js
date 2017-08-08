@@ -82,7 +82,7 @@ const createLeaf = (parent, index, set) => {
   set.xEnd = set.x + (set.w || 0)
   set.yEnd = set.y + (set.h || 0)
   set.parent = parent
-  parent.children[index] = set
+  return (parent.children[index] = set)
 }
 
 export { createBranch, createLeaf }
