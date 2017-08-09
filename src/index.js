@@ -171,6 +171,21 @@ const events = {
   },
   escape: {
     name: 'onEscape'
+  },
+  mediaRewind: {
+    name: 'onMediaRewind'
+  },
+  mediaFastForward: {
+    name: 'onMediaFastForward'
+  },
+  mediaPlay: {
+    name: 'onMediaPlay'
+  },
+  mediaPause: {
+    name: 'onMediaPause'
+  },
+  mediaPlayPause: {
+    name: 'onMediaPlayPause'
   }
 }
 
@@ -194,7 +209,12 @@ const keys = {
   211: events.up,
   212: events.down,
   461: events.back, // lg webos
-  10009: events.back // tizen
+  10009: events.back, // tizen
+  412: events.mediaRewind, // tizen
+  417: events.mediaFastForward, // tizen
+  415: events.mediaPlay, // tizen
+  19: events.mediaPause, // tizen
+  10252: events.mediaPlayPause // tizen
 }
 
 const aim = {
