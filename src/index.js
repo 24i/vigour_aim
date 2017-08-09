@@ -186,6 +186,9 @@ const events = {
   },
   mediaPlayPause: {
     name: 'onMediaPlayPause'
+  },
+  mediaStop: {
+    name: 'onMediaStop'
   }
 }
 
@@ -210,11 +213,16 @@ const keys = {
   212: events.down,
   461: events.back, // lg webos
   10009: events.back, // tizen
-  412: events.mediaRewind, // tizen
-  417: events.mediaFastForward, // tizen
-  415: events.mediaPlay, // tizen
-  19: events.mediaPause, // tizen
-  10252: events.mediaPlayPause // tizen
+  412: events.mediaRewind, // tizen / lg
+  227: events.mediaRewind, // android
+  417: events.mediaFastForward, // tizen / lg
+  228: events.mediaFastForward, // android
+  415: events.mediaPlay, // tizen / lg
+  19: events.mediaPause, // tizen / lg
+  10252: events.mediaPlayPause, // tizen
+  179: events.mediaPlayPause, // android (both pause and play button use this code)
+  178: events.mediaStop, // android
+  413: events.mediaStop // tizen / lg
 }
 
 const aim = {
