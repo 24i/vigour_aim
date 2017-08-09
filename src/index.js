@@ -213,15 +213,21 @@ const keys = {
   212: events.down,
   461: events.back, // lg webos
   10009: events.back, // tizen
+
   412: events.mediaRewind, // tizen / lg
-  227: events.mediaRewind, // android
+  227: events.mediaRewind, // android / firefox os
+
   417: events.mediaFastForward, // tizen / lg
-  228: events.mediaFastForward, // android
+  228: events.mediaFastForward, // android / firefox os
+
+  250: events.mediaPlay, // firefox os
   415: events.mediaPlay, // tizen / lg
-  19: events.mediaPause, // tizen / lg
+  19: events.mediaPause, // tizen / lg / firefox os
+
   10252: events.mediaPlayPause, // tizen
   179: events.mediaPlayPause, // android (both pause and play button use this code)
-  178: events.mediaStop, // android
+
+  178: events.mediaStop, // android / firefox os
   413: events.mediaStop // tizen / lg
 }
 
