@@ -56,9 +56,15 @@ const createLeaf = (parent, index, set) => {
       set.y = parent.y
       if (index) {
         for (let i = index - 1; i >= 0; i--) {
-          if (i in parent.children) {
+          if (parent.children[i]) {
+          // if (i in parent.children) {
             set.y = parent.children[i].yEnd + 1
             break
+          } else if (i in parent.children) {
+            console.warn('how is this possible: we need to find out')
+            console.log('array:', JSON.stringify(parent.children))
+            console.log('i:', i)
+            console.log('i in array:', i in parent.children)
           }
         }
       }
