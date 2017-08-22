@@ -232,22 +232,68 @@ const keys = {
 }
 
 const aim = {
+  /**
+  * Current focused leaf.
+  * @property {Object | Boolean}
+  * @readonly
+  */
   currentFocus: false,
+  /**
+  * X start position of virtual view.
+  * @property {Number}
+  * @readonly
+  */
   x: 0,
+  /**
+  * X end position of virtual view.
+  * @property {Number}
+  * @readonly
+  */
   xEnd: 0,
+  /**
+  * Y start position of virtual view.
+  * @property {Number}
+  * @readonly
+  */
   y: 0,
+  /**
+  * Y end position of virtual view.
+  * @property {Number}
+  * @readonly
+  */
   yEnd: 0,
+  /**
+  * Children of top level view.
+  * @property {Array.<Object>}
+  * @readonly
+  */
   children: [],
-  /*
-    starting direction
+  /**
+  * Top level direction of layout, y being column, x being row.
+  * @property {String}
   */
   direction: 'y',
-
+  /**
+  * Focus one item upward.
+  */
   up: () => changeFocus(aim, events.up.direction, events.up.delta),
+  /**
+  * Focus one item downward.
+  */
   down: () => changeFocus(aim, events.down.direction, events.down.delta),
+  /**
+  * Focus one to the left.
+  */
   left: () => changeFocus(aim, events.left.direction, events.left.delta),
+  /**
+  * Focus one to the right.
+  */
   right: () => changeFocus(aim, events.right.direction, events.right.delta),
-
+  /**
+  * Will delegate given event to currently focused item.
+  * @param {Event} e
+  * @example window.addEventListener('keydown', e => aim.handleKeyEvent(e))
+  */
   handleKeyEvent (e) {
     if (e.keyCode in keys && aim.currentFocus) {
       const event = keys[e.keyCode]
@@ -266,23 +312,20 @@ const aim = {
       }
     }
   },
-
-  /*
-    register target, this can happen on eg. render
-    params:
-    - position (obj) eg [0,0,0]
-    - target (obj) eg { state, x, y, onFocus, focusUpdate, onBlur }
-    returns target
+  /**
+  * Registers target on given position.
+  * @param {Object} target Target containing handlers.
+  * @param {Array.<Number>} position Coordinates for position.
+  * @returns {Object} target
   */
   register (target, position) {
     setOnPosition(position, target)
     autoFocus(aim, target)
     return target
   },
-  /*
-    unregister target, this can happen on eg. remove
-    params:
-    - position (obj) eg [0,0,0]
+  /**
+  * Unregisters target.
+  * @param {Object} target Target to unregister.
   */
   unregister (target) {
     var index = target.index
@@ -305,12 +348,35 @@ const aim = {
       delete children[index]
     }
   },
-  /*
-    unregister target, this can happen on eg. remove
-    params:
-    - position (obj) eg [0,0,0]
-    - set (obj) eg { x }
+  /**
+  * Gets target on given position.
+  * @param {Array.<Number>} position Coordinates for position.
+  * @returns {Object|undefined} target
   */
+  get (position) {
+    for (var i = 0, l = position.length, child = aim; i < l && child; i++) {
+      child = child.children[position[i]]
+    }
+    return child
+  },
+  /**
+  * Focuses passed target.
+  * @param {Object} target Target to focus.
+  * @returns {Object|undefined} target
+  */
+  focus: target => {
+    if (!('children' in target)) {
+      return focusElement(aim, target)
+    }
+  },
+  offsetX (target, x, w) {
+    target.xOffset = x
+    if (w !== void 0) target.wOffset = w
+  },
+  offsetY (target, y, h) {
+    target.yOffset = y
+    if (h !== void 0) target.hOffset = h
+  },
   update (target, property, value, throttleTime) {
     target[property] = value
     if (!('children' in target)) {
@@ -323,25 +389,6 @@ const aim = {
         updatePositions(aim)
         aim.updateTimer = null
       }, throttleTime)
-    }
-  },
-  get (position) {
-    for (var i = 0, l = position.length, child = aim; i < l && child; i++) {
-      child = child.children[position[i]]
-    }
-    return child
-  },
-  offsetX (target, x, w) {
-    target.xOffset = x
-    if (w !== void 0) target.wOffset = w
-  },
-  offsetY (target, y, h) {
-    target.yOffset = y
-    if (h !== void 0) target.hOffset = h
-  },
-  focus: target => {
-    if (!('children' in target)) {
-      return focusElement(aim, target)
     }
   }
 }

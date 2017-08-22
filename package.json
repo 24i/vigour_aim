@@ -4,6 +4,8 @@
   "main": "dist/index.js",
   "description": "Dependency free focus manager with built-in universal key navigation.",
   "scripts": {
+    "doc": "documentation readme src/index.js --section=API && doctoc README.md",
+    "doc-watch": "documentation serve --watch src/index.js",
     "dev": "task",
     "watch": "builder-boy src/index.js dist/index.js -t node -r -w",
     "build": "builder-boy src/index.js dist/index.js -t node -r && npm run build-util",
